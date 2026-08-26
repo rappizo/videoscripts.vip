@@ -1,0 +1,50 @@
+{
+  "dimensions": [
+    {
+      "id": "hook",
+      "name": "Hook Strength",
+      "description": "The first 1-3 seconds create a curiosity gap, make a specific promise, or trigger recognition. Would a viewer stop scrolling?",
+      "anchorLow": "Generic greeting or statement of topic; no reason to keep watching",
+      "anchorHigh": "Immediate, specific, emotionally charged; viewer cannot scroll without missing a concrete answer"
+    },
+    {
+      "id": "retention",
+      "name": "Retention",
+      "description": "Every 3-5 seconds delivers new information, a turn, or an escalation. No filler sentences, no dead air.",
+      "anchorLow": "Long setup, repeated points, energy drops in the middle",
+      "anchorHigh": "Constant forward motion; each line earns the next second"
+    },
+    {
+      "id": "specificity",
+      "name": "Specificity",
+      "description": "Concrete numbers, named objects, real scenarios instead of vague claims and abstract advice.",
+      "anchorLow": "Vague words: 'better', 'faster', 'a lot', no numbers or names",
+      "anchorHigh": "Exact figures, named tools, vivid one-sentence scenes the viewer recognizes"
+    },
+    {
+      "id": "originality",
+      "name": "Originality",
+      "description": "Avoids overused phrases and recycled openings. The angle, framing, or wording feels fresh.",
+      "anchorLow": "Generic advice already seen in dozens of videos, cliché phrasing",
+      "anchorHigh": "A surprising frame, unexpected comparison, or a detail only the writer could know"
+    },
+    {
+      "id": "emotion",
+      "name": "Emotional Impact",
+      "description": "Creates a feeling: curiosity, relief, tension, humor, recognition, or motivation. Not neutral information delivery.",
+      "anchorLow": "Dry, detached, reads like a manual",
+      "anchorHigh": "Viewer feels something by line two and keeps feeling it"
+    },
+    {
+      "id": "pacing",
+      "name": "Pacing",
+      "description": "Sentence rhythm fits the spoken medium: short lines, varied length, natural spoken English, no written-style clauses.",
+      "anchorLow": "Dense paragraphs, subclauses, formal written English",
+      "anchorHigh": "Punchy spoken lines that sound natural out loud and match the video rhythm"
+    }
+  ],
+  "thresholds": {
+    "passAvg": 7.5,
+    "passHook": 8.0
+  }
+}

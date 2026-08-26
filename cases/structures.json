@@ -1,0 +1,104 @@
+{
+  "structures": [
+    {
+      "name": "Story cold open",
+      "description": "Start mid-story with a cliffhanger, rewind to explain, resolve with a lesson. Works for tech, fitness, lifestyle.",
+      "beatFlow": "0-3s: 'The moment I realized my data was gone' — 3-12s: how it started, normal day — 12-24s: the mistake escalates — 24-30s: the fix + the one lesson"
+    },
+    {
+      "name": "Problem / solution",
+      "description": "Name the pain in one line, show the cost of ignoring it, deliver a concrete fix, end with one action.",
+      "beatFlow": "0-4s: 'Your downloads folder is slowing your Mac' — 4-10s: the hidden cost — 10-26s: three-step fix, each step on screen — 26-30s: do step one today"
+    },
+    {
+      "name": "Before / after",
+      "description": "Paint a vivid messy before, name the turning point, show after with specific numbers.",
+      "beatFlow": "0-6s: the messy before, specific and visual — 6-14s: the single change — 14-26s: the after, real numbers — 26-30s: how to copy it"
+    },
+    {
+      "name": "Listicle",
+      "description": "Promise a specific count, move fast, each item gets one line and one visual.",
+      "beatFlow": "0-4s: '4 apps I deleted in January' — 4-24s: one item per ~5s, escalating — 24-30s: the one that hurt the most"
+    },
+    {
+      "name": "Myth bust",
+      "description": "Quote the popular myth, explain why everyone believes it, destroy it with evidence, offer the replacement.",
+      "beatFlow": "0-4s: 'Stretching prevents injuries — wrong' — 4-12s: why the myth spreads — 12-26s: the actual evidence — 26-30s: what to do instead"
+    },
+    {
+      "name": "Underdog",
+      "description": "Rock bottom in specific detail, the doubters, the method and grind, the comeback numbers.",
+      "beatFlow": "0-6s: the lowest point — 6-14s: what everyone said — 14-24s: the unglamorous method — 24-30s: the result + one line of wisdom"
+    },
+    {
+      "name": "Challenge framing",
+      "description": "Dare the viewer with clear rules and a promise of what happens by day N.",
+      "beatFlow": "0-4s: 'Do this for 7 days' — 4-12s: the exact rules — 12-24s: what changes and when — 24-30s: start today, tell me how it goes"
+    },
+    {
+      "name": "A vs B comparison",
+      "description": "Two options face off with honest pros and cons, ending in a clear verdict.",
+      "beatFlow": "0-4s: 'Air fryer vs oven' — 4-14s: option A pros and cons — 14-24s: option B pros and cons — 24-30s: the verdict and who should pick what"
+    },
+    {
+      "name": "Mini documentary",
+      "description": "Neutral narrator tells a small true story with cinematic restraint.",
+      "beatFlow": "0-5s: establishing line — 5-15s: the situation, neutral — 15-26s: the turning point — 26-30s: quiet earned conclusion"
+    },
+    {
+      "name": "Day in the life",
+      "description": "First-person routine with fast cuts and one unexpected moment near the end.",
+      "beatFlow": "0-6s: morning setup — 6-20s: ordinary moments, quick — 20-27s: the one unexpected thing — 27-30s: a small reflection"
+    },
+    {
+      "name": "Reaction / breakdown",
+      "description": "React to a hot product, post or claim, then break down why it works or fails.",
+      "beatFlow": "0-4s: show the thing — 4-12s: first unfiltered reaction — 12-26s: the breakdown — 26-30s: final verdict"
+    },
+    {
+      "name": "Speed tutorial",
+      "description": "Show the result first, then one action per line with on-screen text for every step.",
+      "beatFlow": "0-3s: the finished result — 3-24s: steps, one per line — 24-30s: the one setting people miss"
+    },
+    {
+      "name": "Allegory",
+      "description": "Tell an unrelated small story that lands a big point about the topic.",
+      "beatFlow": "0-7s: a tiny vivid story — 7-20s: the twist — 20-30s: the connection to your topic"
+    },
+    {
+      "name": "Prediction",
+      "description": "A bold claim about the future, then three signals that prove it, then what to do now.",
+      "beatFlow": "0-4s: the bold prediction — 4-12s: why most people miss it — 12-25s: three signals — 25-30s: what to do this week"
+    },
+    {
+      "name": "Honest review",
+      "description": "A real test with specifics: the good, the bad, and whether you'd buy again.",
+      "beatFlow": "0-4s: what I tested and what it cost — 4-14s: the good parts — 14-24s: the bad parts, no hedging — 24-30s: would I buy it again?"
+    },
+    {
+      "name": "Confession",
+      "description": "Admit something people hide, show how bad it got, then the change and the method.",
+      "beatFlow": "0-6s: the confession — 6-14s: how bad it actually got — 14-24s: the turning point — 24-30s: what you can steal from it"
+    },
+    {
+      "name": "Dialogue sketch",
+      "description": "Two characters act out a typical scene, escalating until the punchline reveals the real point.",
+      "beatFlow": "0-6s: set the scene, two characters — 6-20s: escalating dialogue — 20-26s: the punchline — 26-30s: the serious point underneath"
+    },
+    {
+      "name": "Countdown",
+      "description": "Count from N to 1 with rising importance; the last item is the payoff.",
+      "beatFlow": "0-3s: start the countdown — 3-24s: items N..2, escalating stakes — 24-30s: number one, the payoff"
+    },
+    {
+      "name": "POV scenario",
+      "description": "Second person puts the viewer inside a scene until the realization lands.",
+      "beatFlow": "0-7s: 'It's 2am and you can't sleep' — 7-18s: what happens next, sensory detail — 18-25s: the realization — 25-30s: what to do about it"
+    },
+    {
+      "name": "Origin story",
+      "description": "The surprising origin of a product, habit or phenomenon, with one forgotten detail.",
+      "beatFlow": "0-5s: the surprising origin claim — 5-18s: how it actually happened — 18-26s: the forgotten detail — 26-30s: why it still matters"
+    }
+  ]
+}

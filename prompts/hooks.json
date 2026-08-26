@@ -1,0 +1,136 @@
+{
+  "categories": [
+    {
+      "type": "number",
+      "label": "数字钩",
+      "templates": [
+        "I tested {TOPIC} for {N} days straight — the results honestly surprised me.",
+        "{N} signs you're doing {TOPIC} wrong (and the one fix that matters).",
+        "The average person uses {TOPIC} {N} times a week. Here's the one mistake costing you the most.",
+        "I spent {N} dollars on {TOPIC} so you don't have to. Here's what actually worked.",
+        "{N} facts about {TOPIC} that sound fake but are 100% true."
+      ]
+    },
+    {
+      "type": "curiosity",
+      "label": "悬念钩",
+      "templates": [
+        "This looks normal — until you see what it does at {TIME}.",
+        "I found out why everyone's suddenly talking about {TOPIC}, and it's not what you think.",
+        "Nobody explains this part of {TOPIC}. So I will.",
+        "There's a reason {TOPIC} works differently than people assume.",
+        "I wasn't going to post this, but too many people are getting {TOPIC} wrong."
+      ]
+    },
+    {
+      "type": "pain",
+      "label": "痛点钩",
+      "templates": [
+        "If you keep doing {ACTION}, you're leaving results on the table.",
+        "You don't have a {TOPIC} problem. You have a {SYSTEM} problem.",
+        "Your {RESULT} isn't improving — and it's not because of effort.",
+        "Stop doing {ACTION} until you understand this.",
+        "This is the mistake that made me quit {TOPIC} twice before I fixed it."
+      ]
+    },
+    {
+      "type": "contrast",
+      "label": "反差钩",
+      "templates": [
+        "Everyone told me {TOPIC} was a waste of time. {N} months later, I owe them nothing.",
+        "{EXPENSIVE_WAY} is how most people do it. {CHEAP_WAY} is how it should be done.",
+        "It looks like {MISCONCEPTION}. It's actually {TRUTH}.",
+        "The worst advice I ever got about {TOPIC} came from the most confident person in the room.",
+        "{TOPIC} for beginners is a lie. Here's what actually matters on day one."
+      ]
+    },
+    {
+      "type": "benefit",
+      "label": "利益钩",
+      "templates": [
+        "This is the fastest way I know to {RESULT} — no fluff, {N} minutes.",
+        "In {N} seconds I'll show you how to {RESULT}.",
+        "Save this video. It'll help before your next {EVENT}.",
+        "One change to {TOPIC} took my {METRIC} from {X} to {Y}. Here it is.",
+        "If you only learn one thing about {TOPIC}, make it this."
+      ]
+    },
+    {
+      "type": "identity",
+      "label": "身份钩",
+      "templates": [
+        "If you're someone who {ACTION}, this video is for you.",
+        "For everyone who tried {TOPIC} and quit: this is what nobody told you.",
+        "You're not bad at {TOPIC}. You were taught wrong.",
+        "This is for the person who {SITUATION} and still shows up.",
+        "If your {TOOL} looks like this, we need to talk."
+      ]
+    },
+    {
+      "type": "story",
+      "label": "故事开头钩",
+      "templates": [
+        "Last month I {EVENT}. Then I found {DISCOVERY}, and everything changed.",
+        "A stranger asked me about {TOPIC} at {PLACE}. My answer surprised both of us.",
+        "I almost deleted this account because of {TOPIC}. Then I learned {LESSON}.",
+        "My first attempt at {TOPIC} was embarrassing. Here's the video I wish I'd watched.",
+        "{N} years ago I made a {MISTAKE}. Today I'm sharing the fix so you don't have to."
+      ]
+    },
+    {
+      "type": "challenge",
+      "label": "挑战钩",
+      "templates": [
+        "Do this for {N} days and watch {METRIC} change.",
+        "I dare you to try {TOPIC} this way for one week.",
+        "{N}-second challenge: can you spot the mistake?",
+        "If you can do this by the end of the video, you're ahead of 90% of people.",
+        "Take this test: if {SYMPTOM}, your {TOPIC} needs fixing."
+      ]
+    },
+    {
+      "type": "fear",
+      "label": "恐惧钩",
+      "templates": [
+        "Your {TOPIC} is slowly {NEGATIVE_OUTCOME}, and you won't notice until it's expensive.",
+        "Most people discover this {PROBLEM} the hard way. You're about to find out the easy way.",
+        "The longer you ignore {TOPIC}, the worse {METRIC} gets.",
+        "This is silently {NEGATIVE_ACTION} — check yours today.",
+        "Don't {ACTION} until you've seen this."
+      ]
+    },
+    {
+      "type": "secret",
+      "label": "秘密钩",
+      "templates": [
+        "The {INDUSTRY} doesn't want you to know this about {TOPIC}.",
+        "Here's the part of {TOPIC} tutorials never show.",
+        "I asked {N} {EXPERTS} the same question. Only one gave the real answer.",
+        "The hidden setting in {TOOL} that changes everything.",
+        "Nobody posts about this because it's too simple."
+      ]
+    },
+    {
+      "type": "future",
+      "label": "未来预演钩",
+      "templates": [
+        "Imagine {RESULT} in {N} days, without {SACRIFICE}. Here's the plan.",
+        "This is what your {ASPECT} will look like in {TIMEFRAME} if you start today.",
+        "POV: you finally figured out {TOPIC}. Here's how you get there.",
+        "Three months from now, you'll wish you'd watched this.",
+        "Here's what changes the day you fix {TOPIC}."
+      ]
+    },
+    {
+      "type": "comparison",
+      "label": "对比钩",
+      "templates": [
+        "{TOPIC}: what beginners do vs. what works.",
+        "I tried {TOPIC} the popular way and the right way — the difference was obvious.",
+        "{THING_A} vs {THING_B}: stop choosing wrong.",
+        "Before / after {N} days of {TOPIC}: honest results.",
+        "What {TOPIC} looks like at $0 vs $100."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "personas": [
+    {
+      "id": "blunt-techie",
+      "name": "毒舌极客",
+      "voice": "Direct, slightly cynical, technically precise. Calls out nonsense by name. Short punchy sentences.",
+      "example": "Your setup isn't broken. Your process is. Fix the process, not the gear."
+    },
+    {
+      "id": "storyteller",
+      "name": "叙事者",
+      "voice": "Warm, cinematic, vivid sensory detail. Builds tension sentence by sentence, ends with a quiet lesson.",
+      "example": "The lights in the warehouse flickered once — and that's when I noticed the invoice."
+    },
+    {
+      "id": "data-nerd",
+      "name": "数据控",
+      "voice": "Obsessed with numbers, baselines, and control groups. Every claim gets a specific figure.",
+      "example": "Not 'a lot faster.' Eleven seconds faster, measured over forty runs."
+    },
+    {
+      "id": "big-sister",
+      "name": "姐姐型",
+      "voice": "Supportive, protective, real talk from someone who's been there. 'We' not 'you'.",
+      "example": "We've all bought the expensive version of the cheap thing. Here's how to stop."
+    },
+    {
+      "id": "comedian",
+      "name": "幽默型",
+      "voice": "Self-deprecating, exaggerated comparisons, unexpected punchlines. Never mean-spirited.",
+      "example": "My budget app thinks I'm running a charity for takeout places."
+    },
+    {
+      "id": "investigative",
+      "name": "调查记者",
+      "voice": "Neutral, evidence-first, names sources. Asks the question everyone avoids.",
+      "example": "I read the terms you skipped. Page 14 is where it gets interesting."
+    },
+    {
+      "id": "coach",
+      "name": "教练型",
+      "voice": "High energy, imperative verbs, frames everything as trainable. Numbers and drills.",
+      "example": "You don't need more motivation. You need a smaller first step. Here's the step."
+    },
+    {
+      "id": "minimalist",
+      "name": "极简主义者",
+      "voice": "Calm, reduces everything to essence. Deletes jargon, keeps the one thing that matters.",
+      "example": "You don't need ten tools. You need one tool you actually use."
+    },
+    {
+      "id": "skeptic",
+      "name": "怀疑论者",
+      "voice": "Distrusts hype, tests claims personally, reports what actually happened.",
+      "example": "I didn't believe it either. So I ran it myself for a month. Here's the receipt."
+    },
+    {
+      "id": "insider",
+      "name": "内行人",
+      "voice": "Speaks like an industry veteran revealing how things really work behind the scenes.",
+      "example": "I've shipped this exact feature twice. The second time, we did one thing differently."
+    }
+  ]
+}

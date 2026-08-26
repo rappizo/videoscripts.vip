@@ -1,0 +1,220 @@
+{
+  "structures": [
+    {
+      "id": "cold-open-story",
+      "name": "故事冷开场",
+      "description": "从故事中间切入制造悬念,再倒叙,最后给反转或教训",
+      "beats": [
+        { "pct": "0-10%", "beat": "mid-story cliffhanger" },
+        { "pct": "10-40%", "beat": "rewind to the beginning" },
+        { "pct": "40-80%", "beat": "conflict builds, stakes rise" },
+        { "pct": "80-100%", "beat": "resolution + one takeaway" }
+      ]
+    },
+    {
+      "id": "problem-solution",
+      "name": "痛点解决",
+      "description": "戳痛点→放大代价→给出具体解法→行动召唤",
+      "beats": [
+        { "pct": "0-15%", "beat": "name the pain in one line" },
+        { "pct": "15-35%", "beat": "show the cost of ignoring it" },
+        { "pct": "35-85%", "beat": "concrete step-by-step fix" },
+        { "pct": "85-100%", "beat": "one-action CTA" }
+      ]
+    },
+    {
+      "id": "before-after",
+      "name": "前后对比",
+      "description": "Before 状态具象化 → 转折点 → After 结果 + 方法",
+      "beats": [
+        { "pct": "0-20%", "beat": "paint the messy before" },
+        { "pct": "20-40%", "beat": "the turning point / key change" },
+        { "pct": "40-80%", "beat": "after results, specific numbers" },
+        { "pct": "80-100%", "beat": "how to copy it" }
+      ]
+    },
+    {
+      "id": "listicle",
+      "name": "清单体",
+      "description": "明确数量承诺,逐条快速推进,每条一句话+一个画面",
+      "beats": [
+        { "pct": "0-15%", "beat": "promise N items + why they matter" },
+        { "pct": "15-90%", "beat": "each item: name + one detail" },
+        { "pct": "90-100%", "beat": "the single most important one" }
+      ]
+    },
+    {
+      "id": "myth-bust",
+      "name": "误区纠正",
+      "description": "立靶子(常见错误观念)→当场推翻→给出真相",
+      "beats": [
+        { "pct": "0-15%", "beat": "quote the popular myth" },
+        { "pct": "15-30%", "beat": "why everyone believes it" },
+        { "pct": "30-85%", "beat": "the truth + evidence" },
+        { "pct": "85-100%", "beat": "what to do instead" }
+      ]
+    },
+    {
+      "id": "underdog",
+      "name": "逆袭叙事",
+      "description": "低谷 → 被低估 → 坚持/方法 → 翻盘结果",
+      "beats": [
+        { "pct": "0-20%", "beat": "rock bottom, specific and vivid" },
+        { "pct": "20-45%", "beat": "what everyone said / doubted" },
+        { "pct": "45-80%", "beat": "the method and grind" },
+        { "pct": "80-100%", "beat": "comeback numbers + lesson" }
+      ]
+    },
+    {
+      "id": "challenge-framing",
+      "name": "挑战体",
+      "description": "向观众发起可执行挑战,给出规则和预期结果",
+      "beats": [
+        { "pct": "0-15%", "beat": "the dare, one sentence" },
+        { "pct": "15-40%", "beat": "rules of the challenge" },
+        { "pct": "40-80%", "beat": "what to expect by day N" },
+        { "pct": "80-100%", "beat": "start today, tag / comment" }
+      ]
+    },
+    {
+      "id": "comparison-a-b",
+      "name": "对比体",
+      "description": "两个方案/产品/做法正面交锋,给出明确结论",
+      "beats": [
+        { "pct": "0-15%", "beat": "A vs B, stakes set" },
+        { "pct": "15-45%", "beat": "option A, honest pros/cons" },
+        { "pct": "45-75%", "beat": "option B, honest pros/cons" },
+        { "pct": "75-100%", "beat": "verdict + who should pick what" }
+      ]
+    },
+    {
+      "id": "mini-doc",
+      "name": "微纪录片",
+      "description": "纪录片旁白质感,客观视角讲一个真实小故事",
+      "beats": [
+        { "pct": "0-15%", "beat": "establishing shot in words" },
+        { "pct": "15-45%", "beat": "the situation, neutral tone" },
+        { "pct": "45-85%", "beat": "the turning point" },
+        { "pct": "85-100%", "beat": "quiet, earned conclusion" }
+      ]
+    },
+    {
+      "id": "day-in-life",
+      "name": "日常 vlog",
+      "description": "第一视角日常流水,在平凡里埋一个反差点",
+      "beats": [
+        { "pct": "0-20%", "beat": "morning / setup scene" },
+        { "pct": "20-70%", "beat": "ordinary moments, fast cuts" },
+        { "pct": "70-90%", "beat": "the one unexpected thing" },
+        { "pct": "90-100%", "beat": "small reflection" }
+      ]
+    },
+    {
+      "id": "reaction",
+      "name": "反应体",
+      "description": "对某个热点/产品/观点的即时反应与拆解",
+      "beats": [
+        { "pct": "0-15%", "beat": "show the thing being reacted to" },
+        { "pct": "15-45%", "beat": "first reaction, unfiltered" },
+        { "pct": "45-85%", "beat": "breakdown: why it works or fails" },
+        { "pct": "85-100%", "beat": "final verdict" }
+      ]
+    },
+    {
+      "id": "fast-tutorial",
+      "name": "极速教程",
+      "description": "零废话教学,每 3 秒一个动作,全程屏上提示",
+      "beats": [
+        { "pct": "0-10%", "beat": "the result, shown first" },
+        { "pct": "10-80%", "beat": "steps, one action per line" },
+        { "pct": "80-100%", "beat": "the one setting people miss" }
+      ]
+    },
+    {
+      "id": "allegory",
+      "name": "寓言体",
+      "description": "用一个不相干的小故事讲清一个大道理",
+      "beats": [
+        { "pct": "0-25%", "beat": "the small story, vivid detail" },
+        { "pct": "25-70%", "beat": "story twist" },
+        { "pct": "70-100%", "beat": "the connection to real life" }
+      ]
+    },
+    {
+      "id": "prediction",
+      "name": "预测体",
+      "description": "对未来趋势的大胆判断 + 推理过程",
+      "beats": [
+        { "pct": "0-15%", "beat": "the bold prediction" },
+        { "pct": "15-45%", "beat": "why most people won't see it coming" },
+        { "pct": "45-85%", "beat": "three signals proving it" },
+        { "pct": "85-100%", "beat": "what to do about it now" }
+      ]
+    },
+    {
+      "id": "honest-review",
+      "name": "真实测评",
+      "description": "用过之后的诚实评价,好与坏都讲,有具体数据",
+      "beats": [
+        { "pct": "0-15%", "beat": "what I bought / tested + price" },
+        { "pct": "15-45%", "beat": "the good parts, specifics" },
+        { "pct": "45-80%", "beat": "the bad parts, no hedging" },
+        { "pct": "80-100%", "beat": "would I buy it again?" }
+      ]
+    },
+    {
+      "id": "confession",
+      "name": "自曝体",
+      "description": "承认一个普遍不敢承认的事,建立共鸣后给方法",
+      "beats": [
+        { "pct": "0-20%", "beat": "the confession" },
+        { "pct": "20-45%", "beat": "how bad it actually got" },
+        { "pct": "45-85%", "beat": "the moment I changed" },
+        { "pct": "85-100%", "beat": "what you can steal from this" }
+      ]
+    },
+    {
+      "id": "sketch",
+      "name": "对话小品",
+      "description": "双角色对话演出一个典型场景,用幽默点出问题",
+      "beats": [
+        { "pct": "0-20%", "beat": "scene set, two characters" },
+        { "pct": "20-70%", "beat": "escalating dialogue" },
+        { "pct": "70-90%", "beat": "punchline / reveal" },
+        { "pct": "90-100%", "beat": "the serious point underneath" }
+      ]
+    },
+    {
+      "id": "countdown",
+      "name": "倒计时",
+      "description": "从 N 数到 1,重要性递增,最后一条是爆点",
+      "beats": [
+        { "pct": "0-10%", "beat": "start the countdown" },
+        { "pct": "10-80%", "beat": "items N..2, escalating" },
+        { "pct": "80-100%", "beat": "number 1, the payoff" }
+      ]
+    },
+    {
+      "id": "pov-scenario",
+      "name": "POV 情景代入",
+      "description": "第二人称把观众放进一个具体场景里体验",
+      "beats": [
+        { "pct": "0-25%", "beat": "put the viewer in the scene" },
+        { "pct": "25-60%", "beat": "what happens, sensory detail" },
+        { "pct": "60-85%", "beat": "the realization" },
+        { "pct": "85-100%", "beat": "how to get out / act" }
+      ]
+    },
+    {
+      "id": "origin-story",
+      "name": "起源故事",
+      "description": "讲一个产品/习惯/现象的起源,以小见大",
+      "beats": [
+        { "pct": "0-20%", "beat": "the surprising origin claim" },
+        { "pct": "20-60%", "beat": "how it actually happened" },
+        { "pct": "60-85%", "beat": "the forgotten detail" },
+        { "pct": "85-100%", "beat": "why it still matters" }
+      ]
+    }
+  ]
+}

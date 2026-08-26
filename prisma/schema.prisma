@@ -1,0 +1,137 @@
+// Prisma schema — 短视频脚本 AI 工具
+// SQLite 单文件,零运维
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 项目(一个选题)
+model Project {
+  id          String   @id @default(cuid())
+  topic       String
+  description String   @default("")
+  niche       String   @default("")
+  audience    String   @default("")
+  platform    String   @default("tiktok")
+  durationSec Int      @default(30)
+  language    String   @default("English")
+  style       String   @default("")
+  goal        String   @default("")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  materials Material[]
+  angles    Angle[]
+}
+
+// 素材(字段化录入)
+model Material {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type       String // fact | data | quote | feature | keyword | story
+  content    String
+  isRequired Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+// 内容角度
+model Angle {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  premise   String
+  whyItWorks String  @default("")
+  cards     String   @default("{}") // 创意牌组快照 JSON
+  score     Float?
+  status    String   @default("draft") // draft | selected | rejected
+  createdAt DateTime @default(now())
+
+  hooks   Hook[]
+  outline Outline?
+}
+
+// 钩子
+model Hook {
+  id        String   @id @default(cuid())
+  angleId   String
+  angle     Angle    @relation(fields: [angleId], references: [id], onDelete: Cascade)
+  text      String
+  hookType  String // 公式库中的钩子类型 id
+  scores    String   @default("{}") // rubric 各维度分 JSON
+  total     Float?
+  selected  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// 大纲(素材引用锁死)
+model Outline {
+  id        String   @id @default(cuid())
+  angleId   String   @unique
+  angle     Angle    @relation(fields: [angleId], references: [id], onDelete: Cascade)
+  sections  String // JSON: [{beat, timeRange, direction, materialRefs[]}]
+  status    String   @default("draft") // draft | locked
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scripts Script[]
+}
+
+// 脚本(分镜正文)
+model Script {
+  id        String   @id @default(cuid())
+  outlineId String
+  outline   Outline  @relation(fields: [outlineId], references: [id], onDelete: Cascade)
+  version   Int      @default(1)
+  hookText  String   @default("")
+  segments  String // JSON: [{time, voiceover, visual, onscreenText}]
+  scores    String   @default("{}")
+  cards     String   @default("{}") // 生成时牌组快照
+  status    String   @default("draft") // draft | edited | approved
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviews  Review[]
+  editLogs EditLog[]
+}
+
+// 评审记录
+model Review {
+  id         String   @id @default(cuid())
+  scriptId   String
+  script     Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  dimensions String // JSON: {name: {score, reason}}
+  findings   String   @default("[]") // JSON
+  avgScore   Float?
+  passed     Boolean  @default(false)
+  attempt    Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+// 编辑记录(微调数据飞轮)
+model EditLog {
+  id        String   @id @default(cuid())
+  scriptId  String
+  script    Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  field     String
+  before    String
+  after     String
+  createdAt DateTime @default(now())
+}
+
+// 内置案例库
+model Case {
+  id         String   @id @default(cuid())
+  category   String // hook | structure
+  content    String
+  tags       String // JSON
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+}
