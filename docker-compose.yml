@@ -1,0 +1,32 @@
+# 自托管部署:应用 + PostgreSQL 一键起
+# 使用: 服务器上填好 .env(APP_PASSWORD / AUTH_SECRET 必填)后执行 docker compose up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: videoscripts
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d videoscripts"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/videoscripts
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

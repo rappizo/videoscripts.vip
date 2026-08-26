@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import LogoutButton from "@/components/LogoutButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 模型诊断
               </Link>
             </nav>
+            <LogoutButton />
           </div>
         </header>
         <main className="flex-1">{children}</main>
