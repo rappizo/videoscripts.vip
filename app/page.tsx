@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import CreateProjectForm from "@/components/CreateProjectForm";
+import BriefFlow from "@/components/BriefFlow";
 import ProjectList from "@/components/ProjectList";
 import type { ProjectSummary } from "@/components/types";
 
@@ -30,12 +30,24 @@ export default async function Home() {
   }));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-xl font-bold mb-6">项目</h1>
-      <div className="grid gap-6 lg:grid-cols-[1fr_400px] items-start">
-        <ProjectList projects={summaries} />
-        <CreateProjectForm />
+    <div className="mx-auto max-w-6xl px-4 py-8 space-y-8">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold tracking-tight">
+          <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-slate-400 bg-clip-text text-transparent">
+            短视频脚本 AI 工作室
+          </span>
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          专为产品宣传视频:反套路创意牌 × 钩子工厂 × 素材锁定 × 六维评审改写
+        </p>
       </div>
+
+      <BriefFlow />
+
+      <section>
+        <h2 className="text-lg font-bold mb-3">项目({projects.length})</h2>
+        <ProjectList projects={summaries} />
+      </section>
     </div>
   );
 }

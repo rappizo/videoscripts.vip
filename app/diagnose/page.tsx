@@ -34,14 +34,14 @@ export default function DiagnosePage() {
           </Btn>
         }
       >
-        <p className="text-sm text-zinc-500">
-          调用 <code className="text-zinc-300">GET /v1/models</code> 验证 API Key 和可用模型名。
-          确认后把 claude 模型名填入 <code className="text-zinc-300">.env</code> 的 MODEL_CREATIVE /
+        <p className="text-sm text-slate-500">
+          调用 <code className="text-slate-700">GET /v1/models</code> 验证 API Key 和可用模型名。
+          确认后把 claude 模型名填入 <code className="text-slate-700">.env</code> 的 MODEL_CREATIVE /
           MODEL_CRITIC。
         </p>
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
         {result != null && (
-          <pre className="mt-3 overflow-auto rounded-lg bg-zinc-950 border border-zinc-800 p-4 text-xs text-zinc-300 max-h-96">
+          <pre className="mt-3 overflow-auto rounded-lg bg-slate-50 border border-slate-200 p-4 text-xs text-slate-700 max-h-96">
             {JSON.stringify(result, null, 2)}
           </pre>
         )}

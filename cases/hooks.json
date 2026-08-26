@@ -179,6 +179,42 @@
       "niche": "kitchen",
       "emotion": "practical",
       "hookType": "pain"
+    },
+    {
+      "text": "I used the same face wash for six months and wondered why nothing changed. Then I actually read the ingredient list.",
+      "niche": "skincare",
+      "emotion": "curiosity",
+      "hookType": "story"
+    },
+    {
+      "text": "Your moisturizer isn't the problem. The order you apply your routine is. Here's the ten-second fix.",
+      "niche": "skincare",
+      "emotion": "practical",
+      "hookType": "contrast"
+    },
+    {
+      "text": "I tested this serum for 28 days. Day 9 was when my skin freaked out — and here's what that actually means.",
+      "niche": "skincare",
+      "emotion": "curiosity",
+      "hookType": "story"
+    },
+    {
+      "text": "This cleanser removes sunscreen in one step. I checked with a UV camera to make sure.",
+      "niche": "skincare",
+      "emotion": "practical",
+      "hookType": "benefit"
+    },
+    {
+      "text": "Dermatologists keep recommending one ingredient for almost everything — and it's probably already sitting in your routine.",
+      "niche": "skincare",
+      "emotion": "curiosity",
+      "hookType": "secret"
+    },
+    {
+      "text": "Stop buying skincare based on your skin type. Here's the one label that matters more.",
+      "niche": "skincare",
+      "emotion": "relief",
+      "hookType": "contrast"
     }
   ]
 }

@@ -27,30 +27,40 @@ export interface CompleteOptions {
 }
 
 export async function complete(opts: CompleteOptions): Promise<string> {
-  const model = opts.model ?? getModel("creative");
+  const primary = opts.model ?? getModel("creative");
+  const fallbacks = (process.env.MODEL_FALLBACKS || "claude-sonnet-5,claude-sonnet-4-6,claude-opus-4-6")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const models = [...new Set([primary, ...fallbacks])];
   let lastErr: unknown;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const res = await client.chat.completions.create({
-        model,
-        temperature: opts.temperature ?? 0.8,
-        max_tokens: opts.maxTokens ?? 2000,
-        messages: [
-          { role: "system", content: opts.system },
-          { role: "user", content: opts.user },
-        ],
-      });
-      const text = res.choices[0]?.message?.content ?? "";
-      if (!text.trim()) throw new Error("Empty response from model");
-      return text;
-    } catch (e) {
-      lastErr = e;
-      const wait = Math.min(2000 * 2 ** attempt, 8000);
-      await new Promise((r) => setTimeout(r, wait));
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await client.chat.completions.create({
+          model,
+          temperature: opts.temperature ?? 0.8,
+          max_tokens: opts.maxTokens ?? 2000,
+          messages: [
+            { role: "system", content: opts.system },
+            { role: "user", content: opts.user },
+          ],
+        });
+        const text = res.choices[0]?.message?.content ?? "";
+        if (!text.trim()) throw new Error("Empty response from model");
+        return text;
+      } catch (e) {
+        lastErr = e;
+        const msg = e instanceof Error ? e.message : String(e);
+        // 通道不可用/限流类错误立即换下一个模型,其余短暂退避重试
+        if (/no available channels|503|overloaded|rate limit/i.test(msg)) break;
+        const wait = Math.min(1500 * 2 ** attempt, 5000);
+        await new Promise((r) => setTimeout(r, wait));
+      }
     }
   }
   throw new Error(
-    `AI request failed after 3 retries: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`
+    `AI request failed for models [${models.join(", ")}]: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`
   );
 }
 
@@ -78,5 +88,14 @@ export function extractJson<T>(text: string): T {
 
 export async function completeJson<T>(opts: CompleteOptions): Promise<T> {
   const text = await complete(opts);
-  return extractJson<T>(text);
+  try {
+    return extractJson<T>(text);
+  } catch {
+    // 输出可能被截断或带杂质:追加指令重试一次
+    const retry = await complete({
+      ...opts,
+      user: `${opts.user}\n\nIMPORTANT: Your previous response was not valid complete JSON. Output ONLY the complete valid JSON object now — no prose, no markdown fences, no truncation.`,
+    });
+    return extractJson<T>(retry);
+  }
 }

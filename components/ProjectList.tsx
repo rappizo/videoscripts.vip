@@ -16,8 +16,8 @@ export default function ProjectList({ projects }: { projects: ProjectSummary[] }
 
   if (!projects.length) {
     return (
-      <div className="rounded-xl border border-dashed border-zinc-800 p-10 text-center text-zinc-500">
-        还没有项目。从右侧新建一个选题开始。
+      <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-slate-500">
+        还没有项目。在上方输入产品名生成方案后开工。
       </div>
     );
   }
@@ -25,16 +25,16 @@ export default function ProjectList({ projects }: { projects: ProjectSummary[] }
   return (
     <div className="space-y-3">
       {projects.map((p) => (
-        <div key={p.id} className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 flex items-center gap-4">
+        <div key={p.id} className="rounded-xl border border-slate-200 bg-white p-4 flex items-center gap-4">
           <div className="flex-1 min-w-0">
-            <Link href={`/project/${p.id}`} className="font-medium hover:text-violet-300 transition-colors">
+            <Link href={`/project/${p.id}`} className="font-medium hover:text-emerald-600 transition-colors">
               {p.topic}
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <Tag>{p.niche || "未分类"}</Tag>
               <Tag>{p.durationSec}s</Tag>
               {p.audience && <Tag>{p.audience}</Tag>}
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-slate-500">
                 素材 {p.materialCount} · 角度 {p.angleCount}
                 {p.selectedAngle ? ` · 已选:「${p.selectedAngle}」` : ""}
                 {p.hasOutline ? " · 大纲已锁定" : ""}

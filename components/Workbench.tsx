@@ -209,7 +209,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
       {/* 头部 */}
       <div>
-        <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300">
+        <Link href="/" className="text-sm text-slate-500 hover:text-slate-700">
           ← 返回项目列表
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -219,12 +219,12 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
           {data.audience && <Tag>{data.audience}</Tag>}
         </div>
         {error && (
-          <div className="mt-3 rounded-lg border border-red-900/60 bg-red-950/30 px-4 py-3 text-sm text-red-300">
+          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </div>
         )}
         {busy && (
-          <div className="mt-3 rounded-lg border border-violet-900/60 bg-violet-950/30 px-4 py-3">
+          <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
             <Spinner label={busy} />
           </div>
         )}
@@ -235,7 +235,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
         title={`素材(${data.materials.length})— 会在脚本中被强制引用`}
         right={
           data.description ? (
-            <span className="text-xs text-zinc-500 max-w-md truncate">{data.description}</span>
+            <span className="text-xs text-slate-500 max-w-md truncate">{data.description}</span>
           ) : undefined
         }
       >
@@ -244,17 +244,17 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
             {data.materials.map((m) => (
               <span
                 key={m.id}
-                className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-3 py-1.5 text-sm"
+                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm"
                 title={m.content}
               >
-                <span className="text-zinc-500 text-xs">{MATERIAL_TYPES[m.type] ?? m.type}</span>
-                {m.isRequired && <span className="text-amber-400 text-xs ml-1">必用</span>}
+                <span className="text-slate-400 text-xs">{MATERIAL_TYPES[m.type] ?? m.type}</span>
+                {m.isRequired && <span className="text-amber-600 text-xs ml-1">必用</span>}
                 <span className="ml-2">{m.content}</span>
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-zinc-500">未录入素材(可在角度/大纲阶段继续)</p>
+          <p className="text-sm text-slate-500">未录入素材(可在角度/大纲阶段继续)</p>
         )}
       </Panel>
 
@@ -269,7 +269,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
         }
       >
         {data.angles.length === 0 ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-slate-500">
             每个角度会随机抽取一套创意牌(叙事结构 × 创作者人设 × 开场方式 × 情绪曲线),避免套路化。
           </p>
         ) : (
@@ -280,17 +280,17 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                 onClick={() => pickAngle(a)}
                 className={`text-left rounded-lg border p-3 transition-colors ${
                   a.status === "selected"
-                    ? "border-violet-500 bg-violet-950/30"
-                    : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                    ? "border-emerald-500 bg-emerald-50"
+                    : "border-slate-200 bg-white hover:border-slate-300"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium">{a.title}</span>
-                  {a.status === "selected" && <span className="text-xs text-violet-300">✓ 已选</span>}
+                  {a.status === "selected" && <span className="text-xs text-emerald-600">✓ 已选</span>}
                 </div>
-                <p className="mt-1 text-sm text-zinc-400">{a.premise}</p>
+                <p className="mt-1 text-sm text-slate-600">{a.premise}</p>
                 {a.whyItWorks && (
-                  <p className="mt-1 text-xs text-emerald-400/80">{a.whyItWorks}</p>
+                  <p className="mt-1 text-xs text-emerald-600/80">{a.whyItWorks}</p>
                 )}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <Tag>{a.cards.structureName}</Tag>
@@ -316,9 +316,9 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
         }
       >
         {!selectedAngle ? (
-          <p className="text-sm text-zinc-500">先在 ① 选择一个角度。</p>
+          <p className="text-sm text-slate-500">先在 ① 选择一个角度。</p>
         ) : selectedAngle.hooks.length === 0 ? (
-          <p className="text-sm text-zinc-500">12 类钩子公式随机抽取,每条独立评分,取 top 5。</p>
+          <p className="text-sm text-slate-500">12 类钩子公式随机抽取,每条独立评分,取 top 5。</p>
         ) : (
           <>
             <div className="space-y-2">
@@ -328,8 +328,8 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                   onClick={() => pickHook(h.id)}
                   className={`w-full text-left rounded-lg border p-3 transition-colors ${
                     h.selected
-                      ? "border-violet-500 bg-violet-950/30"
-                      : "border-zinc-800 bg-zinc-900 hover:border-zinc-600"
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-slate-200 bg-white hover:border-slate-300"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -337,18 +337,18 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                     <span
                       className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-bold ${
                         (h.total ?? 0) >= 8
-                          ? "bg-emerald-950 text-emerald-300"
+                          ? "bg-emerald-100 text-emerald-700"
                           : (h.total ?? 0) >= 6
-                            ? "bg-amber-950 text-amber-300"
-                            : "bg-red-950 text-red-300"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-red-100 text-red-700"
                       }`}
                     >
                       {(h.total ?? 0).toFixed(1)}
                     </span>
                   </div>
-                  <div className="mt-1 text-xs text-zinc-500">
+                  <div className="mt-1 text-xs text-slate-500">
                     {h.hookType}
-                    {h.selected && <span className="ml-2 text-violet-300">✓ 已选</span>}
+                    {h.selected && <span className="ml-2 text-emerald-600">✓ 已选</span>}
                   </div>
                 </button>
               ))}
@@ -356,7 +356,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
             {selectedAngle.hooks.length > 5 && (
               <button
                 onClick={() => setShowAllHooks(!showAllHooks)}
-                className="mt-2 text-xs text-zinc-500 hover:text-zinc-300"
+                className="mt-2 text-xs text-slate-500 hover:text-slate-700"
               >
                 {showAllHooks ? "收起" : `查看全部 ${selectedAngle.hooks.length} 条`}
               </button>
@@ -378,40 +378,40 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
         }
       >
         {!selectedHook ? (
-          <p className="text-sm text-zinc-500">先在 ② 选择一个钩子。已选钩子:{selectedAngle?.hooks.find((h) => h.selected)?.text ?? "无"}</p>
+          <p className="text-sm text-slate-500">先在 ② 选择一个钩子。已选钩子:{selectedAngle?.hooks.find((h) => h.selected)?.text ?? "无"}</p>
         ) : selectedHook && !outline ? (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-slate-500">
             将用钩子「{selectedHook.text}」生成分节大纲。必填素材若未被引用会自动重写,直到全部覆盖。
           </p>
         ) : outline ? (
           <>
             <div className="space-y-3">
               {draftSections.map((sec, i) => (
-                <div key={i} className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 grid gap-2 md:grid-cols-[90px_110px_1fr_1fr]">
+                <div key={i} className="rounded-lg border border-slate-200 bg-white p-3 grid gap-2 md:grid-cols-[90px_110px_1fr_1fr]">
                   <input
                     value={sec.timeRange}
                     onChange={(e) => editOutlineSection(i, "timeRange", e.target.value)}
-                    className="rounded bg-zinc-800 border border-zinc-700 px-2 py-1 text-xs"
+                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-xs"
                   />
                   <input
                     value={sec.beat}
                     onChange={(e) => editOutlineSection(i, "beat", e.target.value)}
-                    className="rounded bg-zinc-800 border border-zinc-700 px-2 py-1 text-xs"
+                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-xs"
                   />
                   <input
                     value={sec.summary}
                     onChange={(e) => editOutlineSection(i, "summary", e.target.value)}
-                    className="rounded bg-zinc-800 border border-zinc-700 px-2 py-1 text-sm"
+                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-sm"
                     placeholder="内容概要"
                   />
                   <input
                     value={sec.direction}
                     onChange={(e) => editOutlineSection(i, "direction", e.target.value)}
-                    className="rounded bg-zinc-800 border border-zinc-700 px-2 py-1 text-sm"
+                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-sm"
                     placeholder="画面/语气"
                   />
                   <div className="md:col-span-4 flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-zinc-500">引用素材:</span>
+                    <span className="text-xs text-slate-500">引用素材:</span>
                     {sec.materialRefs.map((ref) => (
                       <Tag key={ref}>
                         {materialById.get(ref)?.slice(0, 24) ?? ref}
@@ -421,7 +421,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                       value={sec.materialRefs.join(", ")}
                       onChange={(e) => editOutlineSection(i, "materialRefs", e.target.value)}
                       placeholder="素材 id,逗号分隔"
-                      className="ml-1 flex-1 rounded bg-zinc-800 border border-zinc-700 px-2 py-0.5 text-xs text-zinc-500"
+                      className="ml-1 flex-1 rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-xs text-slate-500"
                     />
                   </div>
                 </div>
@@ -431,10 +431,10 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
               <Btn onClick={lockAndGenScripts} disabled={!!busy}>
                 {outline.status === "locked" ? "生成脚本(3 个候选 + 评审)" : "锁定大纲并生成脚本"}
               </Btn>
-              {outline.status === "locked" && <span className="text-xs text-emerald-400">大纲已锁定</span>}
+              {outline.status === "locked" && <span className="text-xs text-emerald-600">大纲已锁定</span>}
             </div>
             {coverage && (
-              <p className="mt-2 text-xs text-amber-400">
+              <p className="mt-2 text-xs text-amber-600">
                 ⚠ 自动重写后仍有必填素材未被引用:{coverage.missing.map((id) => materialById.get(id)?.slice(0, 20) ?? id).join("、")},可在上方手动补标注。
               </p>
             )}
@@ -445,13 +445,13 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
       {/* 步骤 4:脚本 */}
       <Panel title={`④ 脚本候选(${scripts.length})`}>
         {!scripts.length ? (
-          <p className="text-sm text-zinc-500">锁定大纲后生成 3 个脚本候选,每个都会经过六维评审与定向改写。</p>
+          <p className="text-sm text-slate-500">锁定大纲后生成 3 个脚本候选,每个都会经过六维评审与定向改写。</p>
         ) : (
           <div className="grid gap-6">
             {scripts.map((s, idx) => {
               const review = latestReview(s);
               return (
-                <div key={s.id} className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+                <div key={s.id} className="rounded-xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-wrap items-center gap-3 mb-3">
                     <span className="font-semibold">候选 {idx + 1}</span>
                     <Tag>结构:{s.cards.structureName}</Tag>
@@ -461,7 +461,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                     {review && (
                       <span
                         className={`rounded-md px-2 py-0.5 text-xs font-bold ${
-                          review.passed ? "bg-emerald-950 text-emerald-300" : "bg-amber-950 text-amber-300"
+                          review.passed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                         }`}
                       >
                         均分 {review.avgScore?.toFixed(1)} {review.passed ? "✓ 通过" : "未达标"}
@@ -469,8 +469,8 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                     )}
                   </div>
 
-                  <p className="mb-3 rounded-lg bg-zinc-900 border border-zinc-800 px-3 py-2 text-sm">
-                    <span className="text-violet-300 font-medium">钩子:</span> {s.hookText}
+                  <p className="mb-3 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm">
+                    <span className="text-emerald-700 font-medium">钩子:</span> {s.hookText}
                   </p>
 
                   {review && (
@@ -483,7 +483,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                   {review?.findings.length ? (
                     <ul className="mb-3 space-y-1">
                       {review.findings.map((f, i) => (
-                        <li key={i} className={`text-xs ${f.startsWith("critical") ? "text-red-400" : "text-zinc-500"}`}>
+                        <li key={i} className={`text-xs ${f.startsWith("critical") ? "text-red-600" : "text-slate-500"}`}>
                           {f}
                         </li>
                       ))}
@@ -496,25 +496,25 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                         <input
                           value={seg.time}
                           onChange={(e) => editSegment(s, i, "time", e.target.value)}
-                          className="rounded bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-xs"
+                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-xs"
                         />
                         <textarea
                           value={seg.voiceover}
                           onChange={(e) => editSegment(s, i, "voiceover", e.target.value)}
                           rows={1}
-                          className="rounded bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-sm resize-y"
+                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-sm resize-y"
                           placeholder="台词 VO"
                         />
                         <input
                           value={seg.visual}
                           onChange={(e) => editSegment(s, i, "visual", e.target.value)}
-                          className="rounded bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-sm"
+                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-sm"
                           placeholder="画面"
                         />
                         <input
                           value={seg.onscreenText}
                           onChange={(e) => editSegment(s, i, "onscreenText", e.target.value)}
-                          className="rounded bg-zinc-900 border border-zinc-800 px-2 py-1.5 text-sm"
+                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-sm"
                           placeholder="屏上字幕"
                         />
                       </div>
@@ -534,8 +534,8 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
                     <Btn onClick={() => deleteScript(s)} variant="danger">
                       删除
                     </Btn>
-                    {savedTip === s.id && <span className="text-xs text-emerald-400">已保存(修改已记录,供微调使用)</span>}
-                    {savedTip === "copied" && <span className="text-xs text-emerald-400">已复制</span>}
+                    {savedTip === s.id && <span className="text-xs text-emerald-600">已保存(修改已记录,供微调使用)</span>}
+                    {savedTip === "copied" && <span className="text-xs text-emerald-600">已复制</span>}
                   </div>
                 </div>
               );
