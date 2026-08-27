@@ -67,6 +67,7 @@ export interface SerializedAngle {
   title: string;
   premise: string;
   whyItWorks: string;
+  explanationZh: string;
   status: string;
   cards: {
     structureName?: string;

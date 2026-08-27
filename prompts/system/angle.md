@@ -34,5 +34,6 @@ Respond with ONLY valid JSON, no markdown fences:
 {
   "title": "short catchy angle name (max 8 words)",
   "premise": "2-3 sentences: the specific take, who it's for, and why it lands",
-  "whyItWorks": "1-2 sentences: why this angle beats the generic version of this topic"
+  "whyItWorks": "1-2 sentences: why this angle beats the generic version of this topic",
+  "explanationZh": "2-3句中文大白话:这个方案视频具体怎么拍、前3秒说什么、为什么目标观众会看下去,让不懂英文的执行者也能秒懂"
 }

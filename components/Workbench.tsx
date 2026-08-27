@@ -239,7 +239,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
   const genAngles = () =>
     run({
       key: "angles",
-      label: `正在生成 ${process.env.NEXT_PUBLIC_ANGLE_COUNT || 5} 个角度…`,
+      label: `正在生成 ${process.env.NEXT_PUBLIC_ANGLE_COUNT || 2} 个角度…`,
       url: `/api/projects/${data.id}/angles`,
       init: { method: "POST" },
       onSuccess: () => toast.push("success", "新角度已生成"),

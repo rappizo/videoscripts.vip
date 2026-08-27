@@ -30,6 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             title: candidate.title,
             premise: candidate.premise,
             whyItWorks: candidate.whyItWorks ?? "",
+            explanationZh: candidate.explanationZh ?? "",
             cards: JSON.stringify(candidate.cards),
           },
         });

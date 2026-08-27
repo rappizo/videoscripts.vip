@@ -78,5 +78,6 @@ export interface AngleCandidate {
   title: string;
   premise: string;
   whyItWorks: string;
+  explanationZh: string;
   cards: CreativeCards;
 }

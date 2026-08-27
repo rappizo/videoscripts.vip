@@ -58,6 +58,7 @@ model Angle {
   title     String
   premise   String
   whyItWorks String  @default("")
+  explanationZh String @default("") // 中文大白话解析,让执行者秒懂方案
   cards     String   @default("{}") // 创意牌组快照 JSON
   score     Float?
   status    String   @default("draft") // draft | selected | rejected

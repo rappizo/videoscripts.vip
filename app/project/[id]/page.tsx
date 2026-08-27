@@ -60,6 +60,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       title: a.title,
       premise: a.premise,
       whyItWorks: a.whyItWorks,
+      explanationZh: a.explanationZh,
       status: a.status,
       cards: JSON.parse(a.cards),
       hooks: a.hooks.map((h) => ({

@@ -12,6 +12,7 @@ export interface Brief {
   audience: string;
   style: string;
   goal: string;
+  explanationZh: string;
   materials: { type: string; content: string; isRequired: boolean }[];
 }
 
@@ -118,7 +119,7 @@ export default function BriefFlow() {
             产品宣传视频脚本
           </span>
         </h2>
-        <p className="mt-1 text-sm text-slate-500">选品类 → 填产品名 → AI 生成 5 个项目方案,选一个开工</p>
+        <p className="mt-1 text-sm text-slate-500">选品类 → 填产品名 → AI 生成 2 个项目方案,选一个开工</p>
       </div>
 
       <div className="mb-4">
@@ -149,7 +150,7 @@ export default function BriefFlow() {
           className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none focus:border-emerald-500 focus:bg-white"
         />
         <Btn onClick={generate} disabled={busy || !productName.trim()}>
-          {briefs ? "换一批(重新生成 5 个)" : "生成 5 个项目方案"}
+          {briefs ? "换一批(重新生成 2 个)" : "生成 2 个项目方案"}
         </Btn>
       </div>
 
@@ -217,7 +218,7 @@ export default function BriefFlow() {
 
       {busy && (
         <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <Spinner label="正在为产品构思 5 个不同角度的项目方案…" />
+          <Spinner label="正在为产品构思 2 个不同角度的项目方案…" />
         </div>
       )}
       {error && (
@@ -235,31 +236,43 @@ export default function BriefFlow() {
                 key={i}
                 className="flex flex-col rounded-xl border border-slate-200 bg-slate-50/50 p-4 hover:border-emerald-300 transition-colors"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-slate-800">{b.title}</h3>
-                  <span className="shrink-0 text-xs text-slate-400">方案 {i + 1}</span>
-                </div>
-                <p className="mt-2 rounded-lg border border-emerald-200/60 bg-white px-3 py-2 text-sm text-emerald-800 font-medium">
-                  🪝 {b.hookPreview}
-                </p>
-                <p className="mt-2 text-sm text-slate-600">{b.description}</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Tag>{b.audience}</Tag>
-                  <Tag>{b.style}</Tag>
-                  <Tag>目标:{b.goal}</Tag>
-                </div>
-                {b.materials.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {b.materials.slice(0, 3).map((m, j) => (
-                      <li key={j} className="text-xs text-slate-500">
-                        · {m.content}
-                      </li>
-                    ))}
-                    {b.materials.length > 3 && (
-                      <li className="text-xs text-slate-400">…共 {b.materials.length} 条卖点素材</li>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {/* 左:方案原文 */}
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-semibold text-slate-800">{b.title}</h3>
+                      <span className="shrink-0 text-xs text-slate-400">方案 {i + 1}</span>
+                    </div>
+                    <p className="mt-2 rounded-lg border border-emerald-200/60 bg-white px-3 py-2 text-sm text-emerald-800 font-medium">
+                      🪝 {b.hookPreview}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-600">{b.description}</p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <Tag>{b.audience}</Tag>
+                      <Tag>{b.style}</Tag>
+                      <Tag>目标:{b.goal}</Tag>
+                    </div>
+                    {b.materials.length > 0 && (
+                      <ul className="mt-2 space-y-1">
+                        {b.materials.slice(0, 3).map((m, j) => (
+                          <li key={j} className="text-xs text-slate-500">
+                            · {m.content}
+                          </li>
+                        ))}
+                        {b.materials.length > 3 && (
+                          <li className="text-xs text-slate-400">…共 {b.materials.length} 条卖点素材</li>
+                        )}
+                      </ul>
                     )}
-                  </ul>
-                )}
+                  </div>
+                  {/* 右:中文解析 */}
+                  {b.explanationZh && (
+                    <div className="rounded-lg bg-emerald-50/60 p-3 md:border-l md:border-emerald-100">
+                      <p className="text-xs font-medium text-emerald-600">中文解析</p>
+                      <p className="mt-1 text-sm leading-relaxed text-slate-700">{b.explanationZh}</p>
+                    </div>
+                  )}
+                </div>
                 <div className="mt-3">
                   <Btn onClick={() => startWithBrief(b)} disabled={!!creating}>
                     {creating === b.title ? "创建中…" : "用这个方案开工 →"}

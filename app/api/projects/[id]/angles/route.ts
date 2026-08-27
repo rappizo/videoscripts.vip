@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const uid = await sessionUid(request);
     const project = await accessibleProject(uid, id);
     if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const count = Number(process.env.NEXT_PUBLIC_ANGLE_COUNT || 5);
+    const count = Number(process.env.NEXT_PUBLIC_ANGLE_COUNT || 2);
     const jobId = await launchJob(
       { projectId: id, stage: "angles", userId: uid && uid !== MASTER_UID ? uid : null },
       async (jobId) => {
@@ -34,6 +34,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
               premise: c.premise,
               cards: JSON.stringify(c.cards),
               whyItWorks: c.whyItWorks ?? "",
+              explanationZh: c.explanationZh ?? "",
             },
           });
         }

@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: "category / niche / productName are required" }, { status: 400 });
     }
-    const count = Number(process.env.BRIEF_COUNT || 5);
+    const count = Number(process.env.BRIEF_COUNT || 2);
     const uid = await sessionUid(request);
     const jobId = await launchJob(
       { stage: "brief", projectId: null, userId: uid && uid !== MASTER_UID ? uid : null },

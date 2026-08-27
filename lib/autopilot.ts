@@ -17,7 +17,7 @@ export async function runAutoPilot(projectId: string, jobId: string): Promise<vo
   if (!angle) {
     const existing = await prisma.angle.findMany({ where: { projectId }, orderBy: { createdAt: "asc" } });
     if (!existing.length) {
-      const count = Number(process.env.NEXT_PUBLIC_ANGLE_COUNT || 5);
+      const count = Number(process.env.NEXT_PUBLIC_ANGLE_COUNT || 2);
       await resetJobProgress(jobId, { step: "angles", done: 0, total: count });
       const candidates = await mapLimit(Array.from({ length: count }), 4, async (_, i) => {
         const c = await generateAngle(ctx);
@@ -32,6 +32,7 @@ export async function runAutoPilot(projectId: string, jobId: string): Promise<vo
             premise: c.premise,
             cards: JSON.stringify(c.cards),
             whyItWorks: c.whyItWorks ?? "",
+            explanationZh: c.explanationZh ?? "",
           },
         });
       }

@@ -35,6 +35,7 @@ Respond with ONLY valid JSON, no markdown fences:
   "audience": "target audience",
   "style": "video style and tone",
   "goal": "primary goal",
+  "explanationZh": "2-3句中文大白话:这个方案是拍什么、钩子讲什么、为什么能打动目标观众,让不懂英文的执行者也能秒懂",
   "materials": [
     { "type": "feature", "content": "a selling point", "isRequired": true }
   ]

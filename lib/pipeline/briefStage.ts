@@ -12,6 +12,7 @@ export interface ProductBrief {
   audience: string;
   style: string;
   goal: string;
+  explanationZh: string;
   materials: { type: string; content: string; isRequired: boolean }[];
 }
 
