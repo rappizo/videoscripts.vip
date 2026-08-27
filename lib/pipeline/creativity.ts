@@ -30,23 +30,21 @@ const EMOTION_ARCS = [
   "tension → relief",
   "recognition → hope",
   "humor → insight",
-  "awe → practical takeaway",
+  "overwhelm → relief → quiet joy",
   "fear → safety",
   "frustration → clarity",
   "nostalgia → motivation",
 ];
 
 const MASHUP_DOMAINS = [
-  "true crime documentary",
-  "sports commentary",
-  "cooking show",
-  "courtroom drama",
-  "nature documentary",
-  "stand-up comedy",
-  "detective noir",
-  "financial news broadcast",
   "reality TV confessional",
-  "video game walkthrough",
+  "stand-up comedy",
+  "group chat drama",
+  "ASMR",
+  "live-stream chat",
+  "true crime podcast (casual fan, not broadcaster)",
+  "home cooking show",
+  "vlog editing style",
 ];
 
 export function drawCards(rng: () => number = Math.random): CreativeCards {
@@ -86,7 +84,7 @@ export function cardsToPrompt(cards: CreativeCards): string {
     `- Opening device: ${cards.opening}`,
     `- Emotion arc: ${cards.emotionArc}`,
     cards.mashup
-      ? `- Cross-domain flavor: pace and build tension like a ${cards.mashup}`
+      ? `- Cross-domain flavor: borrow the casual energy of ${cards.mashup}`
       : "- Cross-domain flavor: none",
   ];
   return lines.filter(Boolean).join("\n");

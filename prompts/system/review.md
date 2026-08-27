@@ -23,6 +23,7 @@ Score the script 1-10 on each dimension below using the rubric. Then list concre
 
 # Also check (list as findings if present)
 - Any banned cliché phrase: {{BANLIST}}
+- Official-ad feel: corporate tone, cinematic narrator, documentary VO, studio-style visuals, brand-film structure ("introducing...", feature-list reading)
 - Missing or watered-down required material
 - Hook promises something the body never delivers
 - Segments that exceed ~5 seconds of talking without new information
@@ -41,7 +42,8 @@ Respond with ONLY valid JSON, no markdown fences:
     "specificity": { "score": 8, "reason": "..." },
     "originality": { "score": 6, "reason": "..." },
     "emotion": { "score": 7, "reason": "..." },
-    "pacing": { "score": 9, "reason": "..." }
+    "pacing": { "score": 9, "reason": "..." },
+    "authenticity": { "score": 9, "reason": "..." }
   },
   "avgScore": 7.5,
   "findings": [ "critical|minor: description" ],

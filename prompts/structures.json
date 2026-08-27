@@ -1,14 +1,13 @@
 {
   "structures": [
     {
-      "id": "cold-open-story",
-      "name": "故事冷开场",
-      "description": "从故事中间切入制造悬念,再倒叙,最后给反转或教训",
+      "id": "one-scene-moment",
+      "name": "单场景瞬间",
+      "description": "全程一个真实场景(厨房/卫生间/车里/床边),产品自然出现,没有完整剧情,只有真实瞬间",
       "beats": [
-        { "pct": "0-10%", "beat": "mid-story cliffhanger" },
-        { "pct": "10-40%", "beat": "rewind to the beginning" },
-        { "pct": "40-80%", "beat": "conflict builds, stakes rise" },
-        { "pct": "80-100%", "beat": "resolution + one takeaway" }
+        { "pct": "0-15%", "beat": "open in the middle of a real moment" },
+        { "pct": "15-70%", "beat": "the honest thought / small struggle" },
+        { "pct": "70-100%", "beat": "product slips in naturally + one felt line" }
       ]
     },
     {
@@ -55,14 +54,13 @@
       ]
     },
     {
-      "id": "underdog",
-      "name": "逆袭叙事",
-      "description": "低谷 → 被低估 → 坚持/方法 → 翻盘结果",
+      "id": "text-story",
+      "name": "文字故事卡",
+      "description": "自拍镜头+屏幕文字讲故事,像截图日记,真实生活片段拼起来",
       "beats": [
-        { "pct": "0-20%", "beat": "rock bottom, specific and vivid" },
-        { "pct": "20-45%", "beat": "what everyone said / doubted" },
-        { "pct": "45-80%", "beat": "the method and grind" },
-        { "pct": "80-100%", "beat": "comeback numbers + lesson" }
+        { "pct": "0-20%", "beat": "first text card hits with emotion" },
+        { "pct": "20-80%", "beat": "cards build the story, real clips" },
+        { "pct": "80-100%", "beat": "last card lands the feeling" }
       ]
     },
     {
@@ -88,20 +86,19 @@
       ]
     },
     {
-      "id": "mini-doc",
-      "name": "微纪录片",
-      "description": "纪录片旁白质感,客观视角讲一个真实小故事",
+      "id": "emotional-flip",
+      "name": "情绪反转",
+      "description": "1-2 个场景:开头压抑/疲惫(照顾家人、没时间打理自己)→产品出现→最后露出真笑/和家人一起的幸福瞬间,卖情绪不卖道理",
       "beats": [
-        { "pct": "0-15%", "beat": "establishing shot in words" },
-        { "pct": "15-45%", "beat": "the situation, neutral tone" },
-        { "pct": "45-85%", "beat": "the turning point" },
-        { "pct": "85-100%", "beat": "quiet, earned conclusion" }
+        { "pct": "0-20%", "beat": "grey, tired, real-life overwhelm" },
+        { "pct": "20-70%", "beat": "the small moment of change" },
+        { "pct": "70-100%", "beat": "glow + genuine smile / family moment" }
       ]
     },
     {
       "id": "day-in-life",
       "name": "日常 vlog",
-      "description": "第一视角日常流水,在平凡里埋一个反差点",
+      "description": "1-2 个真实生活场景的随手拍流水,在平凡里埋一个反差点",
       "beats": [
         { "pct": "0-20%", "beat": "morning / setup scene" },
         { "pct": "20-70%", "beat": "ordinary moments, fast cuts" },

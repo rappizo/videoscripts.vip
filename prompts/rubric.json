@@ -41,6 +41,13 @@
       "description": "Sentence rhythm fits the spoken medium: short lines, varied length, natural spoken English, no written-style clauses.",
       "anchorLow": "Dense paragraphs, subclauses, formal written English",
       "anchorHigh": "Punchy spoken lines that sound natural out loud and match the video rhythm"
+    },
+    {
+      "id": "authenticity",
+      "name": "Authenticity / 网感",
+      "description": "Does it feel like a real person filmed this on their phone in real life — or like an official brand ad? UGC energy, real settings, imperfect speech.",
+      "anchorLow": "Corporate tone, cinematic narrator, documentary VO, studio-style visuals, feature-list reading",
+      "anchorHigh": "Raw UGC energy: 1-2 real scenes, genuine emotion, product appears naturally, sounds like a friend talking"
     }
   ],
   "thresholds": {

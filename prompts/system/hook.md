@@ -17,7 +17,7 @@ Fill the template's placeholders with content SPECIFIC to this project. Never ke
 
 # Hard rules
 1. Max 25 words. One or two sentences.
-2. Natural spoken English — read it aloud mentally; it must sound like a person talking.
+2. Natural spoken English — read it aloud mentally; it must sound like a real person venting to their phone, not a host or announcer.
 3. Specificity: at least one concrete detail (a number, a named thing, a real moment).
 4. The hook must create a curiosity gap: the viewer needs to watch to get the payoff.
 5. Never overpromise something the content cannot deliver.
