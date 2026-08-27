@@ -258,7 +258,7 @@ export default function BriefFlow() {
           <p className="mt-5 mb-2 text-xs text-slate-500">
             已生成 {briefs.length} 个方案(已存入项目草稿,每个的创意牌组合不同),选一个开工进入五阶段流水线:
           </p>
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="grid gap-3">
             {briefs.map((b, i) => (
               <div
                 key={i}
