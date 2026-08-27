@@ -23,7 +23,8 @@ interface ScoreResult {
 export async function generateHooks(
   ctx: ProjectContext,
   angle: AngleInfo,
-  count = 12
+  count = 12,
+  onProgress?: (done: number, total: number) => void | Promise<void>
 ): Promise<HookCandidate[]> {
   const catalog = loadJson<HooksCatalogShape>("hooks.json");
   const slots = catalog.categories.flatMap((cat) =>
@@ -32,7 +33,7 @@ export async function generateHooks(
   const picked = shuffle(slots).slice(0, count);
 
   const concurrency = Number(process.env.AI_CONCURRENCY || 4);
-  const generated = await mapLimit(picked, concurrency, async (slot) => {
+  const generated = await mapLimit(picked, concurrency, async (slot, index) => {
     const system = fillTemplate(loadSystem("hook"), {
       HOOK_TYPE: slot.type,
       HOOK_LABEL: slot.label,
@@ -50,6 +51,7 @@ export async function generateHooks(
       temperature: 1.0,
       maxTokens: 200,
     });
+    await onProgress?.(index + 1, picked.length);
     return { text: res.text.trim(), hookType: slot.type, label: slot.label, template: slot.template };
   });
 
@@ -84,4 +86,70 @@ export async function generateHooks(
     return { ...h, scores, total: Math.round(total * 10) / 10, reason: s?.reason ?? "" };
   });
   return merged.sort((a, b) => b.total - a.total);
+}
+
+// 单条钩子重生成:随机抽一个公式生成,再单独评分(不替换其它钩子)
+export async function generateSingleHook(
+  ctx: ProjectContext,
+  angle: AngleInfo
+): Promise<HookCandidate> {
+  const catalog = loadJson<HooksCatalogShape>("hooks.json");
+  const slots = catalog.categories.flatMap((cat) =>
+    cat.templates.map((t) => ({ type: cat.type, label: cat.label, template: t }))
+  );
+  const slot = shuffle(slots)[0];
+  const system = fillTemplate(loadSystem("hook"), {
+    HOOK_TYPE: slot.type,
+    HOOK_LABEL: slot.label,
+    HOOK_TEMPLATE: slot.template,
+    TOPIC: ctx.topic,
+    ANGLE: `${angle.title} — ${angle.premise}`,
+    AUDIENCE: ctx.audience || "general audience",
+    DURATION: String(ctx.durationSec),
+    MATERIALS: ctx.materials.map((m) => m.content).join(" | "),
+    BANLIST: banlistText(),
+  });
+  const res = await completeJson<{ text: string }>({
+    system,
+    user: `Write the hook for angle: ${angle.title}`,
+    temperature: 1.0,
+    maxTokens: 200,
+  });
+  const text = res.text.trim();
+
+  const scoreSystem = fillTemplate(loadSystem("hookScore"), {
+    TOPIC: ctx.topic,
+    ANGLE: `${angle.title} — ${angle.premise}`,
+    AUDIENCE: ctx.audience || "general audience",
+    HOOKS: `#0: ${text}`,
+  });
+  const scored = await completeJson<ScoreResult>({
+    system: scoreSystem,
+    user: "Score all hooks now.",
+    model: getModel("critic"),
+    temperature: 0.2,
+    maxTokens: 500,
+  });
+  const s = scored.results.find((r) => r.index === 0);
+  const scores: HookScores = s
+    ? {
+        specificity: s.specificity,
+        curiosityGap: s.curiosityGap,
+        promiseClarity: s.promiseClarity,
+        first3seconds: s.first3seconds,
+        contentFit: s.contentFit,
+      }
+    : {};
+  const total = s
+    ? (s.specificity + s.curiosityGap + s.promiseClarity + s.first3seconds + s.contentFit) / 5
+    : 0;
+  return {
+    text,
+    hookType: slot.type,
+    label: slot.label,
+    template: slot.template,
+    scores,
+    total: Math.round(total * 10) / 10,
+    reason: s?.reason ?? "",
+  };
 }

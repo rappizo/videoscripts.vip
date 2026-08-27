@@ -7,7 +7,8 @@ import type { AngleInfo, OutlineSection, ProjectContext } from "./types";
 export async function generateOutline(
   ctx: ProjectContext,
   angle: AngleInfo,
-  hookText: string
+  hookText: string,
+  onProgress?: (attempt: number, total: number) => void | Promise<void>
 ): Promise<{ sections: OutlineSection[]; coverageOk: boolean; missing: string[] }> {
   const requiredIds = ctx.materials.filter((m) => m.isRequired).map((m) => m.id);
   const vars = {
@@ -24,6 +25,7 @@ export async function generateOutline(
   let sections: OutlineSection[] = [];
   let lastMissing: string[] = [];
   for (let attempt = 1; attempt <= 2; attempt++) {
+    await onProgress?.(attempt, 2);
     const system = fillTemplate(loadSystem("outline"), vars);
     const user =
       attempt === 1

@@ -1,8 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Btn, Panel, ScoreBar, Spinner, Tag } from "./ui";
+import { cancelJob, waitForJob, type JobStatus } from "@/lib/jobClient";
+import { Btn, Spinner, Tag, useToast } from "./ui";
+import Stepper from "./Stepper";
+import MaterialsPanel from "./MaterialsPanel";
+import AnglesPanel from "./AnglesPanel";
+import HooksPanel from "./HooksPanel";
+import OutlinePanel from "./OutlinePanel";
+import ScriptsPanel, { type ScriptView } from "./ScriptsPanel";
+import ProjectEditModal, { type ProjectEditValues } from "./ProjectEditModal";
 import type {
   OutlineSection,
   ProjectDetail,
@@ -11,24 +19,77 @@ import type {
   SerializedSegment,
 } from "./types";
 
-const MATERIAL_TYPES: Record<string, string> = {
-  fact: "事实",
-  data: "数据",
-  quote: "金句",
-  feature: "卖点",
-  keyword: "关键词",
-  story: "故事",
-};
+function jobProgressText(job: JobStatus): string {
+  const p = job.progress as {
+    step?: string;
+    done?: number;
+    total?: number;
+    attempt?: number;
+    round?: number;
+  };
+  const stepLabels: Record<string, string> = {
+    angles: "生成角度",
+    hooks: "生成钩子",
+    outline: "生成大纲",
+    scripts: "生成脚本",
+    done: "收尾",
+  };
+  if (p.step && p.step !== "done") {
+    let s = stepLabels[p.step] ?? p.step;
+    if (typeof p.done === "number" && typeof p.total === "number") s += ` ${p.done}/${p.total}`;
+    if (typeof p.attempt === "number") s += `(第 ${p.attempt}/2 次)`;
+    if (typeof p.round === "number") s += ` · 评审第 ${p.round} 轮`;
+    return `(${s})`;
+  }
+  if (typeof p.done === "number" && typeof p.total === "number") {
+    if (typeof p.round === "number") return `(${p.done + 1}/${p.total} · 评审第 ${p.round} 轮)`;
+    return `(${p.done}/${p.total})`;
+  }
+  if (typeof p.attempt === "number") return `(第 ${p.attempt}/2 次)`;
+  return "";
+}
+
+interface BusyState {
+  key: string;
+  label: string;
+}
+
+// 草稿从 localStorage 惰性恢复(避免 effect 内 setState)
+function loadLocalDrafts(key: string): {
+  scripts: Record<string, SerializedSegment[]>;
+  outline: { id: string; sections: OutlineSection[] } | null;
+} {
+  if (typeof window === "undefined") return { scripts: {}, outline: null };
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw) {
+      const o = JSON.parse(raw) as {
+        scripts?: Record<string, SerializedSegment[]>;
+        outline?: { id: string; sections: OutlineSection[] } | null;
+      };
+      return { scripts: o.scripts ?? {}, outline: o.outline ?? null };
+    }
+  } catch {
+    // ignore
+  }
+  return { scripts: {}, outline: null };
+}
 
 export default function Workbench({ initial }: { initial: ProjectDetail }) {
+  const toast = useToast();
   const [data, setData] = useState<ProjectDetail>(initial);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<BusyState | null>(null);
+  const [activeJob, setActiveJob] = useState<string | null>(null);
   const [showAllHooks, setShowAllHooks] = useState(false);
   const [coverage, setCoverage] = useState<{ coverageOk: boolean; missing: string[] } | null>(null);
-  const [outlineEdit, setOutlineEdit] = useState<{ id: string; sections: OutlineSection[] } | null>(null);
-  const [scriptDrafts, setScriptDrafts] = useState<Record<string, SerializedSegment[]>>({});
-  const [savedTip, setSavedTip] = useState<string | null>(null);
+  const draftKey = `vs-drafts:${initial.id}`;
+  const [localDrafts] = useState(() => loadLocalDrafts(draftKey));
+  const [outlineEdit, setOutlineEdit] = useState<{ id: string; sections: OutlineSection[] } | null>(
+    localDrafts.outline
+  );
+  const [scriptDrafts, setScriptDrafts] = useState<Record<string, SerializedSegment[]>>(localDrafts.scripts);
+  const [scriptView, setScriptView] = useState<ScriptView>("edit");
+  const [editingProject, setEditingProject] = useState(false);
 
   const selectedAngle = useMemo(
     () => data.angles.find((a) => a.status === "selected") ?? null,
@@ -46,83 +107,238 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
     [outlineEdit, outline]
   );
 
-  async function refresh() {
-    const res = await fetch(`/api/projects/${data.id}`);
-    if (res.ok) setData(await res.json());
-  }
-
-  async function run(label: string, url: string, init?: RequestInit, onOk?: (j: unknown) => void) {
-    setBusy(label);
-    setError(null);
-    try {
-      const res = await fetch(url, init);
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((json as { error?: string }).error ?? `HTTP ${res.status}`);
-      onOk?.(json);
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(null);
-    }
-  }
-
   const materialById = useMemo(() => {
     const m = new Map<string, string>();
     for (const mat of data.materials) m.set(mat.id, mat.content);
     return m;
   }, [data.materials]);
 
-  // ---------- 各阶段操作 ----------
+  // 已被大纲引用的素材 id(删除时警告)
+  const referencedIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const a of data.angles) {
+      for (const sec of a.outline?.sections ?? []) {
+        for (const ref of sec.materialRefs) s.add(ref);
+      }
+    }
+    return s;
+  }, [data.angles]);
+
+  // ---------- 草稿自动保存(防刷新丢失) ----------
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ scripts: scriptDrafts, outline: outlineEdit }));
+      } catch {
+        // ignore
+      }
+    }, 800);
+    return () => clearTimeout(t);
+  }, [scriptDrafts, outlineEdit, draftKey]);
+
+  async function refresh() {
+    const res = await fetch(`/api/projects/${data.id}`);
+    if (res.ok) setData(await res.json());
+  }
+
+  async function run(opts: {
+    key: string;
+    label: string;
+    url: string;
+    init?: RequestInit;
+    onJobDone?: (job: JobStatus) => void;
+    onOk?: (j: unknown) => void;
+    onSuccess?: () => void;
+  }) {
+    setBusy({ key: opts.key, label: opts.label });
+    try {
+      const res = await fetch(opts.url, opts.init);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((json as { error?: string }).error ?? `HTTP ${res.status}`);
+      const jobId = (json as { jobId?: string }).jobId;
+      if (jobId) {
+        setActiveJob(jobId);
+        try {
+          const final = await waitForJob(jobId, (j) =>
+            setBusy({ key: opts.key, label: `${opts.label} ${jobProgressText(j)}` })
+          );
+          if (final.status === "failed") throw new Error(final.error || "任务失败");
+          if (final.status === "cancelled") {
+            toast.push("info", "任务已取消");
+            return;
+          }
+          if (final.tokensIn || final.tokensOut) {
+            toast.push(
+              "info",
+              `本次消耗 ${(final.tokensIn + final.tokensOut).toLocaleString()} tokens · $${final.costUsd.toFixed(2)}`
+            );
+          }
+          opts.onJobDone?.(final);
+        } finally {
+          setActiveJob(null);
+        }
+      }
+      opts.onOk?.(json);
+      opts.onSuccess?.();
+      await refresh();
+    } catch (e) {
+      toast.push("error", e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function cancelActiveJob() {
+    if (!activeJob) return;
+    await cancelJob(activeJob);
+  }
+
+  const busyFor = (...prefixes: string[]) =>
+    busy !== null && prefixes.some((p) => busy.key.startsWith(p));
+
+  // 一键流水线运行期间锁住全部阶段,避免并发操作
+  const globalLock = busyFor("autopilot");
+
+  // ---------- 素材 ----------
+  const addMaterial = (type: string, content: string, isRequired: boolean) =>
+    run({
+      key: "materials",
+      label: "添加素材…",
+      url: `/api/projects/${data.id}/materials`,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, content, isRequired }),
+      },
+      onSuccess: () => toast.push("success", "素材已添加"),
+    });
+
+  const updateMaterial = (id: string, patch: { type?: string; content?: string; isRequired?: boolean }) =>
+    run({
+      key: "materials",
+      label: "更新素材…",
+      url: `/api/materials/${id}`,
+      init: {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      },
+      onSuccess: () => toast.push("success", "素材已更新"),
+    });
+
+  const deleteMaterial = (id: string) =>
+    run({
+      key: "materials",
+      label: "删除素材…",
+      url: `/api/materials/${id}`,
+      init: { method: "DELETE" },
+      onSuccess: () => toast.push("success", "素材已删除"),
+    });
+
+  // ---------- 角度 ----------
   const genAngles = () =>
-    run(`正在生成 ${process.env.NEXT_PUBLIC_ANGLE_COUNT || 5} 个角度…`, `/api/projects/${data.id}/angles`, {
-      method: "POST",
+    run({
+      key: "angles",
+      label: `正在生成 ${process.env.NEXT_PUBLIC_ANGLE_COUNT || 5} 个角度…`,
+      url: `/api/projects/${data.id}/angles`,
+      init: { method: "POST" },
+      onSuccess: () => toast.push("success", "新角度已生成"),
     });
 
   const pickAngle = (angle: SerializedAngle) => {
-    if (angle.status === "selected" || busy) return;
-    run("保存角度选择…", `/api/angles/${angle.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "selected" }),
+    if (angle.status === "selected") return;
+    run({
+      key: "angles",
+      label: "保存角度选择…",
+      url: `/api/angles/${angle.id}`,
+      init: {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "selected" }),
+      },
+      onSuccess: () => toast.push("success", "角度已选定"),
     });
   };
 
+  const regenerateAngle = (angle: SerializedAngle) =>
+    run({
+      key: `regen-angle:${angle.id}`,
+      label: "正在换一个角度…",
+      url: `/api/angles/${angle.id}/regenerate`,
+      init: { method: "POST" },
+      onSuccess: () => toast.push("success", "已换一条新角度"),
+    });
+
+  // ---------- 钩子 ----------
   const genHooks = () =>
     selectedAngle &&
-    run("正在生成 12 个钩子并评分…", `/api/angles/${selectedAngle.id}/hooks`, { method: "POST" });
-
-  const pickHook = (id: string) => {
-    if (busy) return;
-    run("保存钩子选择…", `/api/hooks/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ selected: true }),
+    run({
+      key: "hooks",
+      label: "正在生成 12 个钩子并评分…",
+      url: `/api/angles/${selectedAngle.id}/hooks`,
+      init: { method: "POST" },
+      onSuccess: () => toast.push("success", "钩子已生成"),
     });
-  };
 
+  const pickHook = (id: string) =>
+    run({
+      key: "hooks",
+      label: "保存钩子选择…",
+      url: `/api/hooks/${id}`,
+      init: {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selected: true }),
+      },
+      onSuccess: () => toast.push("success", "钩子已选定"),
+    });
+
+  const editHookText = (id: string, text: string) =>
+    run({
+      key: "hooks",
+      label: "保存钩子文本…",
+      url: `/api/hooks/${id}`,
+      init: {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      },
+      onSuccess: () => toast.push("success", "钩子已更新"),
+    });
+
+  const regenerateHook = (id: string) =>
+    run({
+      key: `regen-hook:${id}`,
+      label: "正在换一条钩子…",
+      url: `/api/hooks/${id}/regenerate`,
+      init: { method: "POST" },
+      onSuccess: () => toast.push("success", "已换一条新钩子"),
+    });
+
+  // ---------- 大纲 ----------
   const genOutline = () => {
     if (!selectedAngle || !selectedHook) return;
     setOutlineEdit(null);
-    run(
-      "正在生成大纲(素材引用锁死)…",
-      `/api/angles/${selectedAngle.id}/outline`,
-      {
+    run({
+      key: "outline",
+      label: "正在生成大纲(素材引用锁死)…",
+      url: `/api/angles/${selectedAngle.id}/outline`,
+      init: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hookText: selectedHook.text }),
       },
-      (json) => {
-        const j = json as { coverageOk?: boolean; missing?: string[] };
-        setCoverage(j.coverageOk === false ? { coverageOk: false, missing: j.missing ?? [] } : null);
-      }
-    );
+      onJobDone: (job) => {
+        const p = job.progress as { coverageOk?: boolean; missing?: string[] };
+        setCoverage(p.coverageOk === false ? { coverageOk: false, missing: p.missing ?? [] } : null);
+      },
+      onSuccess: () => toast.push("success", "大纲已生成"),
+    });
   };
 
   const lockAndGenScripts = async () => {
     if (!outline) return;
-    setBusy("锁定大纲…");
-    setError(null);
+    setBusy({ key: "scripts", label: "锁定大纲…" });
     try {
       const res = await fetch(`/api/outlines/${outline.id}`, {
         method: "PATCH",
@@ -131,7 +347,7 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((json as { error?: string }).error ?? "Failed to save outline");
-      setBusy("正在生成 3 个脚本候选并评审…");
+      setBusy({ key: "scripts", label: "正在生成 3 个脚本候选并评审…" });
       const res2 = await fetch(`/api/outlines/${outline.id}/scripts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,32 +355,84 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
       });
       const json2 = await res2.json().catch(() => ({}));
       if (!res2.ok) throw new Error((json2 as { error?: string }).error ?? "Failed to generate scripts");
+      const jobId = (json2 as { jobId?: string }).jobId;
+      if (jobId) {
+        setActiveJob(jobId);
+        try {
+          const final = await waitForJob(jobId, (j) =>
+            setBusy({ key: "scripts", label: `正在生成脚本候选并评审 ${jobProgressText(j)}` })
+          );
+          if (final.status === "failed") throw new Error(final.error || "Failed to generate scripts");
+        } finally {
+          setActiveJob(null);
+        }
+      }
+      setOutlineEdit(null);
+      setCoverage(null);
       await refresh();
+      toast.push("success", "3 个脚本候选已生成");
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      toast.push("error", e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(null);
     }
   };
 
+  // ---------- 脚本 ----------
   const saveScript = (s: SerializedScript) =>
-    run("保存修改…", `/api/scripts/${s.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ segments: scriptDrafts[s.id] ?? s.segments }),
-    }).then(() => {
-      setSavedTip(s.id);
-      setTimeout(() => setSavedTip(null), 2500);
+    run({
+      key: `save:${s.id}`,
+      label: "保存修改…",
+      url: `/api/scripts/${s.id}`,
+      init: {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ segments: scriptDrafts[s.id] ?? s.segments }),
+      },
+      onSuccess: () => {
+        setScriptDrafts((prev) => {
+          const next = { ...prev };
+          delete next[s.id];
+          return next;
+        });
+        toast.push("success", "已保存(修改已记录,供微调使用)");
+      },
     });
 
-  const reviewScript = (s: SerializedScript) =>
-    run("评审+定向改写中(可能 1-2 分钟)…", `/api/scripts/${s.id}/review`, { method: "POST" });
+  const reviewScript = (s: SerializedScript, maxRounds: number) =>
+    run({
+      key: `review:${s.id}`,
+      label: maxRounds === 0 ? "评审中(不改写)…" : "评审+自动迭代改写中(可能 1-3 分钟)…",
+      url: `/api/scripts/${s.id}/review`,
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxRounds }),
+      },
+      onSuccess: () => toast.push("success", maxRounds === 0 ? "评审完成" : "自动迭代改写完成"),
+    });
 
-  const deleteScript = async (s: SerializedScript) => {
-    if (!confirm("删除该脚本?")) return;
-    await fetch(`/api/scripts/${s.id}`, { method: "DELETE" });
-    await refresh();
-  };
+  const collectScript = (s: SerializedScript) =>
+    run({
+      key: `collect:${s.id}`,
+      label: "收藏到案例库…",
+      url: "/api/cases",
+      init: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scriptId: s.id }),
+      },
+      onSuccess: () => toast.push("success", "已收藏到案例库,成为你的专属语料"),
+    });
+
+  const deleteScript = (s: SerializedScript) =>
+    run({
+      key: `save:${s.id}`,
+      label: "删除脚本…",
+      url: `/api/scripts/${s.id}`,
+      init: { method: "DELETE" },
+      onSuccess: () => toast.push("success", "脚本已删除"),
+    });
 
   const copyScript = (s: SerializedScript) => {
     const segs = scriptDrafts[s.id] ?? s.segments;
@@ -176,10 +444,58 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
           `(${seg.time})\nVO: ${seg.voiceover}\nVisual: ${seg.visual}\nText: ${seg.onscreenText || "-"}`
       ),
     ].join("\n\n");
-    navigator.clipboard.writeText(text);
-    setSavedTip("copied");
-    setTimeout(() => setSavedTip(null), 2000);
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast.push("success", "已复制纯文本"))
+      .catch(() => toast.push("error", "复制失败"));
   };
+
+  const exportScript = async (s: SerializedScript, format: "txt" | "srt" | "md") => {
+    try {
+      const res = await fetch(`/api/scripts/${s.id}/export?format=${format}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `script-${s.id.slice(-6)}.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.push("success", `已下载 .${format} 文件`);
+    } catch (e) {
+      toast.push("error", e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  // ---------- 一键流水线 ----------
+  const autoPilot = () =>
+    run({
+      key: "autopilot",
+      label: "一键生成整条脚本…",
+      url: `/api/projects/${data.id}/autopilot`,
+      init: { method: "POST" },
+      onSuccess: () => {
+        setScriptView("compare");
+        toast.push("success", "一键流水线完成,3 个候选已就绪(已自动选中角度/钩子)");
+      },
+    });
+
+  // ---------- 项目编辑 ----------
+  const saveProject = (values: ProjectEditValues) =>
+    run({
+      key: "project",
+      label: "保存项目信息…",
+      url: `/api/projects/${data.id}`,
+      init: {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      },
+      onSuccess: () => {
+        setEditingProject(false);
+        toast.push("success", "项目信息已更新");
+      },
+    });
 
   const editSegment = (script: SerializedScript, index: number, field: keyof SerializedSegment, value: string) => {
     setScriptDrafts((prev) => {
@@ -203,12 +519,24 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
     });
   };
 
-  const latestReview = (s: SerializedScript) => s.reviews[s.reviews.length - 1];
+  // ---------- 步骤条 ----------
+  const baseSteps = [
+    { key: "angles", label: "角度", anchor: "step-angles", done: !!selectedAngle },
+    { key: "hooks", label: "钩子", anchor: "step-hooks", done: !!selectedHook },
+    { key: "outline", label: "大纲", anchor: "step-outline", done: outline?.status === "locked" },
+    { key: "scripts", label: "脚本", anchor: "step-scripts", done: scripts.length > 0 },
+    { key: "export", label: "导出", anchor: "step-scripts", done: scripts.length > 0 },
+  ];
+  const pendingIdx = baseSteps.findIndex((s) => !s.done);
+  const currentIdx = pendingIdx === -1 ? baseSteps.length - 1 : pendingIdx;
+  const steps = baseSteps.map((s, i) => ({ ...s, current: i === currentIdx }));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
+    <div className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+      <Stepper steps={steps} />
+
       {/* 头部 */}
-      <div>
+      <div className="scroll-mt-28">
         <Link href="/" className="text-sm text-slate-500 hover:text-slate-700">
           ← 返回项目列表
         </Link>
@@ -217,332 +545,127 @@ export default function Workbench({ initial }: { initial: ProjectDetail }) {
           <Tag>{data.niche || "未分类"}</Tag>
           <Tag>{data.durationSec}s</Tag>
           {data.audience && <Tag>{data.audience}</Tag>}
+          {data.stats?.jobCount > 0 && (
+            <span className="text-xs text-slate-400">
+              累计 {data.stats.jobCount} 次生成 · {(data.stats.tokensIn + data.stats.tokensOut).toLocaleString()} tokens · $
+              {data.stats.costUsd.toFixed(2)}
+            </span>
+          )}
+          <span className="ml-auto flex items-center gap-2">
+            <Btn
+              onClick={autoPilot}
+              disabled={!!busy}
+              title="自动跑完角度→钩子→大纲→脚本,已完成的步骤会跳过"
+            >
+              一键生成整条脚本 ⚡
+            </Btn>
+            <Btn variant="ghost" onClick={() => setEditingProject(true)} disabled={busyFor("project")}>
+              编辑项目
+            </Btn>
+          </span>
         </div>
-        {error && (
-          <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
         {busy && (
-          <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <Spinner label={busy} />
+          <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-3">
+            <Spinner label={busy.label} />
+            {activeJob && (
+              <button
+                onClick={() => void cancelActiveJob()}
+                className="ml-auto rounded border border-red-200 px-2 py-0.5 text-xs font-medium text-red-600 hover:bg-red-50"
+              >
+                {globalLock ? "暂停(已完成步骤保留)" : "取消任务"}
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {/* 素材 */}
-      <Panel
-        title={`素材(${data.materials.length})— 会在脚本中被强制引用`}
-        right={
-          data.description ? (
-            <span className="text-xs text-slate-500 max-w-md truncate">{data.description}</span>
-          ) : undefined
-        }
-      >
-        {data.materials.length ? (
-          <div className="flex flex-wrap gap-2">
-            {data.materials.map((m) => (
-              <span
-                key={m.id}
-                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm"
-                title={m.content}
-              >
-                <span className="text-slate-400 text-xs">{MATERIAL_TYPES[m.type] ?? m.type}</span>
-                {m.isRequired && <span className="text-amber-600 text-xs ml-1">必用</span>}
-                <span className="ml-2">{m.content}</span>
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500">未录入素材(可在角度/大纲阶段继续)</p>
-        )}
-      </Panel>
+      <div id="step-materials" className="scroll-mt-28">
+        <MaterialsPanel
+          materials={data.materials}
+          referencedIds={referencedIds}
+          disabled={globalLock || busyFor("materials")}
+          onAdd={addMaterial}
+          onUpdate={updateMaterial}
+          onDelete={deleteMaterial}
+        />
+      </div>
 
-      {/* 步骤 1:角度 */}
-      <Panel
-        title="① 内容角度"
-        tone={selectedAngle ? "accent" : "default"}
-        right={
-          <Btn onClick={genAngles} disabled={!!busy} variant="ghost">
-            {data.angles.length ? "重新生成 5 个角度" : "生成 5 个角度"}
-          </Btn>
-        }
-      >
-        {data.angles.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            每个角度会随机抽取一套创意牌(叙事结构 × 创作者人设 × 开场方式 × 情绪曲线),避免套路化。
-          </p>
+      {/* ① 角度 */}
+      <div id="step-angles" className="scroll-mt-28">
+        <AnglesPanel
+          angles={data.angles}
+          disabled={globalLock || busyFor("angles")}
+          spinningId={busy?.key.startsWith("regen-angle:") ? busy.key.slice("regen-angle:".length) : null}
+          onGenerate={genAngles}
+          onPick={pickAngle}
+          onRegenerate={regenerateAngle}
+        />
+      </div>
+
+      {/* ② 钩子 */}
+      <div id="step-hooks" className="scroll-mt-28">
+        {selectedAngle ? (
+          <HooksPanel
+            hooks={selectedAngle.hooks}
+            showAll={showAllHooks}
+            onToggleShowAll={() => setShowAllHooks((v) => !v)}
+            disabled={globalLock || busyFor("hooks")}
+            spinningId={busy?.key.startsWith("regen-hook:") ? busy.key.slice("regen-hook:".length) : null}
+            onGenerate={genHooks}
+            onPick={pickHook}
+            onEditText={editHookText}
+            onRegenerate={regenerateHook}
+          />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {data.angles.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => pickAngle(a)}
-                className={`text-left rounded-lg border p-3 transition-colors ${
-                  a.status === "selected"
-                    ? "border-emerald-500 bg-emerald-50"
-                    : "border-slate-200 bg-white hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{a.title}</span>
-                  {a.status === "selected" && <span className="text-xs text-emerald-600">✓ 已选</span>}
-                </div>
-                <p className="mt-1 text-sm text-slate-600">{a.premise}</p>
-                {a.whyItWorks && (
-                  <p className="mt-1 text-xs text-emerald-600/80">{a.whyItWorks}</p>
-                )}
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Tag>{a.cards.structureName}</Tag>
-                  <Tag>{a.cards.personaName}</Tag>
-                  {a.cards.mashup && <Tag>混搭:{a.cards.mashup}</Tag>}
-                </div>
-              </button>
-            ))}
+          <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
+            先在 ① 选择一个角度。
           </div>
         )}
-      </Panel>
+      </div>
 
-      {/* 步骤 2:钩子 */}
-      <Panel
-        title="② 钩子工厂"
-        tone={selectedHook ? "accent" : "default"}
-        right={
-          selectedAngle ? (
-            <Btn onClick={genHooks} disabled={!!busy} variant="ghost">
-              {selectedAngle.hooks.length ? "重新生成 12 个钩子" : "生成 12 个钩子"}
-            </Btn>
-          ) : undefined
-        }
-      >
-        {!selectedAngle ? (
-          <p className="text-sm text-slate-500">先在 ① 选择一个角度。</p>
-        ) : selectedAngle.hooks.length === 0 ? (
-          <p className="text-sm text-slate-500">12 类钩子公式随机抽取,每条独立评分,取 top 5。</p>
-        ) : (
-          <>
-            <div className="space-y-2">
-              {(showAllHooks ? selectedAngle.hooks : selectedAngle.hooks.slice(0, 5)).map((h) => (
-                <button
-                  key={h.id}
-                  onClick={() => pickHook(h.id)}
-                  className={`w-full text-left rounded-lg border p-3 transition-colors ${
-                    h.selected
-                      ? "border-emerald-500 bg-emerald-50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium">{h.text}</p>
-                    <span
-                      className={`shrink-0 rounded-md px-2 py-0.5 text-xs font-bold ${
-                        (h.total ?? 0) >= 8
-                          ? "bg-emerald-100 text-emerald-700"
-                          : (h.total ?? 0) >= 6
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {(h.total ?? 0).toFixed(1)}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-slate-500">
-                    {h.hookType}
-                    {h.selected && <span className="ml-2 text-emerald-600">✓ 已选</span>}
-                  </div>
-                </button>
-              ))}
-            </div>
-            {selectedAngle.hooks.length > 5 && (
-              <button
-                onClick={() => setShowAllHooks(!showAllHooks)}
-                className="mt-2 text-xs text-slate-500 hover:text-slate-700"
-              >
-                {showAllHooks ? "收起" : `查看全部 ${selectedAngle.hooks.length} 条`}
-              </button>
-            )}
-          </>
-        )}
-      </Panel>
+      {/* ③ 大纲 */}
+      <div id="step-outline" className="scroll-mt-28">
+        <OutlinePanel
+          outline={outline}
+          draftSections={draftSections}
+          selectedHookText={selectedHook?.text ?? null}
+          disabled={globalLock || busyFor("outline", "scripts")}
+          coverage={coverage}
+          materialById={materialById}
+          onEditSection={editOutlineSection}
+          onGenerate={genOutline}
+          onLockAndGen={lockAndGenScripts}
+        />
+      </div>
 
-      {/* 步骤 3:大纲 */}
-      <Panel
-        title="③ 大纲(素材引用锁死)"
-        tone={outline?.status === "locked" ? "accent" : "default"}
-        right={
-          selectedHook ? (
-            <Btn onClick={genOutline} disabled={!!busy} variant="ghost">
-              {outline ? "重新生成大纲" : "生成大纲"}
-            </Btn>
-          ) : undefined
-        }
-      >
-        {!selectedHook ? (
-          <p className="text-sm text-slate-500">先在 ② 选择一个钩子。已选钩子:{selectedAngle?.hooks.find((h) => h.selected)?.text ?? "无"}</p>
-        ) : selectedHook && !outline ? (
-          <p className="text-sm text-slate-500">
-            将用钩子「{selectedHook.text}」生成分节大纲。必填素材若未被引用会自动重写,直到全部覆盖。
-          </p>
-        ) : outline ? (
-          <>
-            <div className="space-y-3">
-              {draftSections.map((sec, i) => (
-                <div key={i} className="rounded-lg border border-slate-200 bg-white p-3 grid gap-2 md:grid-cols-[90px_110px_1fr_1fr]">
-                  <input
-                    value={sec.timeRange}
-                    onChange={(e) => editOutlineSection(i, "timeRange", e.target.value)}
-                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-xs"
-                  />
-                  <input
-                    value={sec.beat}
-                    onChange={(e) => editOutlineSection(i, "beat", e.target.value)}
-                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-xs"
-                  />
-                  <input
-                    value={sec.summary}
-                    onChange={(e) => editOutlineSection(i, "summary", e.target.value)}
-                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-sm"
-                    placeholder="内容概要"
-                  />
-                  <input
-                    value={sec.direction}
-                    onChange={(e) => editOutlineSection(i, "direction", e.target.value)}
-                    className="rounded bg-slate-50 border border-slate-200 px-2 py-1 text-sm"
-                    placeholder="画面/语气"
-                  />
-                  <div className="md:col-span-4 flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-slate-500">引用素材:</span>
-                    {sec.materialRefs.map((ref) => (
-                      <Tag key={ref}>
-                        {materialById.get(ref)?.slice(0, 24) ?? ref}
-                      </Tag>
-                    ))}
-                    <input
-                      value={sec.materialRefs.join(", ")}
-                      onChange={(e) => editOutlineSection(i, "materialRefs", e.target.value)}
-                      placeholder="素材 id,逗号分隔"
-                      className="ml-1 flex-1 rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-xs text-slate-500"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <Btn onClick={lockAndGenScripts} disabled={!!busy}>
-                {outline.status === "locked" ? "生成脚本(3 个候选 + 评审)" : "锁定大纲并生成脚本"}
-              </Btn>
-              {outline.status === "locked" && <span className="text-xs text-emerald-600">大纲已锁定</span>}
-            </div>
-            {coverage && (
-              <p className="mt-2 text-xs text-amber-600">
-                ⚠ 自动重写后仍有必填素材未被引用:{coverage.missing.map((id) => materialById.get(id)?.slice(0, 20) ?? id).join("、")},可在上方手动补标注。
-              </p>
-            )}
-          </>
-        ) : null}
-      </Panel>
+      {/* ④ 脚本 */}
+      <div id="step-scripts" className="scroll-mt-28">
+        <ScriptsPanel
+          scripts={scripts}
+          view={scriptView}
+          setView={setScriptView}
+          drafts={scriptDrafts}
+          disabled={globalLock || busyFor("scripts", "review:", "save:")}
+          spinningId={busy?.key.startsWith("review:") ? busy.key.slice("review:".length) : null}
+          onEditSegment={editSegment}
+          onSave={saveScript}
+          onReview={reviewScript}
+          onCollect={collectScript}
+          onDelete={deleteScript}
+          onCopy={copyScript}
+          onExport={exportScript}
+        />
+      </div>
 
-      {/* 步骤 4:脚本 */}
-      <Panel title={`④ 脚本候选(${scripts.length})`}>
-        {!scripts.length ? (
-          <p className="text-sm text-slate-500">锁定大纲后生成 3 个脚本候选,每个都会经过六维评审与定向改写。</p>
-        ) : (
-          <div className="grid gap-6">
-            {scripts.map((s, idx) => {
-              const review = latestReview(s);
-              return (
-                <div key={s.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <span className="font-semibold">候选 {idx + 1}</span>
-                    <Tag>结构:{s.cards.structureName}</Tag>
-                    <Tag>人设:{s.cards.personaName}</Tag>
-                    {s.cards.mashup && <Tag>混搭:{s.cards.mashup}</Tag>}
-                    {s.status === "edited" && <Tag>已人工修改</Tag>}
-                    {review && (
-                      <span
-                        className={`rounded-md px-2 py-0.5 text-xs font-bold ${
-                          review.passed ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        均分 {review.avgScore?.toFixed(1)} {review.passed ? "✓ 通过" : "未达标"}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="mb-3 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm">
-                    <span className="text-emerald-700 font-medium">钩子:</span> {s.hookText}
-                  </p>
-
-                  {review && (
-                    <div className="mb-3 grid gap-1 md:grid-cols-2">
-                      {Object.entries(review.dimensions).map(([k, v]) => (
-                        <ScoreBar key={k} label={k} score={v.score} />
-                      ))}
-                    </div>
-                  )}
-                  {review?.findings.length ? (
-                    <ul className="mb-3 space-y-1">
-                      {review.findings.map((f, i) => (
-                        <li key={i} className={`text-xs ${f.startsWith("critical") ? "text-red-600" : "text-slate-500"}`}>
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-
-                  <div className="space-y-2">
-                    {(scriptDrafts[s.id] ?? s.segments).map((seg, i) => (
-                      <div key={i} className="grid gap-1.5 md:grid-cols-[70px_1fr_1fr_1fr]">
-                        <input
-                          value={seg.time}
-                          onChange={(e) => editSegment(s, i, "time", e.target.value)}
-                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-xs"
-                        />
-                        <textarea
-                          value={seg.voiceover}
-                          onChange={(e) => editSegment(s, i, "voiceover", e.target.value)}
-                          rows={1}
-                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-sm resize-y"
-                          placeholder="台词 VO"
-                        />
-                        <input
-                          value={seg.visual}
-                          onChange={(e) => editSegment(s, i, "visual", e.target.value)}
-                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-sm"
-                          placeholder="画面"
-                        />
-                        <input
-                          value={seg.onscreenText}
-                          onChange={(e) => editSegment(s, i, "onscreenText", e.target.value)}
-                          className="rounded bg-slate-50 border border-slate-200 px-2 py-1.5 text-sm"
-                          placeholder="屏上字幕"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Btn onClick={() => saveScript(s)} disabled={!!busy}>
-                      保存修改
-                    </Btn>
-                    <Btn onClick={() => reviewScript(s)} disabled={!!busy} variant="ghost">
-                      评审 + 定向改写
-                    </Btn>
-                    <Btn onClick={() => copyScript(s)} variant="ghost">
-                      复制纯文本
-                    </Btn>
-                    <Btn onClick={() => deleteScript(s)} variant="danger">
-                      删除
-                    </Btn>
-                    {savedTip === s.id && <span className="text-xs text-emerald-600">已保存(修改已记录,供微调使用)</span>}
-                    {savedTip === "copied" && <span className="text-xs text-emerald-600">已复制</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Panel>
+      <ProjectEditModal
+        key={String(editingProject)}
+        open={editingProject}
+        initial={data}
+        busy={busyFor("project")}
+        onClose={() => setEditingProject(false)}
+        onSave={saveProject}
+      />
     </div>
   );
 }

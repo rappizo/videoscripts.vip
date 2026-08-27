@@ -88,6 +88,14 @@ export interface ProjectDetail {
   durationSec: number;
   style: string;
   goal: string;
+  platform: string;
+  language: string;
+  stats: {
+    jobCount: number;
+    tokensIn: number;
+    tokensOut: number;
+    costUsd: number;
+  };
   materials: SerializedMaterial[];
   angles: SerializedAngle[];
 }
@@ -103,4 +111,8 @@ export interface ProjectSummary {
   angleCount: number;
   selectedAngle: string | null;
   hasOutline: boolean;
+  scriptCount: number;
+  hookCount: number;
+  starred: boolean;
+  archivedAt: string | null;
 }

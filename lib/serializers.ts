@@ -36,6 +36,18 @@ export function serializeCase(c: any) {
   return { ...c, tags: safeParse(c.tags, {}) };
 }
 
+export function serializeMaterial(m: any) {
+  if (!m) return m;
+  const copy = { ...m };
+  delete copy.project;
+  return copy;
+}
+
+export function serializeJob(j: any) {
+  if (!j) return j;
+  return { ...j, progress: safeParse(j.progress, {}), result: safeParse(j.result, null) };
+}
+
 export function safeParse(raw: string, fallback: unknown) {
   try {
     return JSON.parse(raw);

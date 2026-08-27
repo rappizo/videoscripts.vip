@@ -15,6 +15,9 @@ Score the script 1-10 on each dimension below using the rubric. Then list concre
 # Previous scripts in this project (check for similarity — flag if this script's opening or structure is too close)
 {{PREVIOUS}}
 
+# Editor taste from manual edits in this project (flag anything that repeats what the editor removed/fixed)
+{{EDIT_PREFS}}
+
 # Script
 {{SCRIPT}}
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { MASTER_UID, projectScope, sessionUid } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -26,12 +27,19 @@ const createSchema = z.object({
   materials: z.array(materialSchema).max(30).default([]),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
+  const uid = await sessionUid(request);
   const projects = await prisma.project.findMany({
+    where: projectScope(uid),
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { angles: true, materials: true } },
-      angles: { include: { _count: { select: { hooks: true } }, outline: true } },
+      angles: {
+        include: {
+          _count: { select: { hooks: true } },
+          outline: { include: { _count: { select: { scripts: true } } } },
+        },
+      },
     },
   });
   return NextResponse.json(
@@ -42,11 +50,14 @@ export async function GET() {
       audience: p.audience,
       durationSec: p.durationSec,
       createdAt: p.createdAt,
+      starred: p.starred,
+      archivedAt: p.archivedAt,
       materialCount: p._count.materials,
       angleCount: p._count.angles,
+      hookCount: p.angles.reduce((acc, a) => acc + a._count.hooks, 0),
       selectedAngle: p.angles.find((a) => a.status === "selected")?.title ?? null,
       hasOutline: p.angles.some((a) => a.outline?.status === "locked"),
-      scriptCount: p.angles.reduce((acc, a) => acc + (a.outline ? 0 : 0), 0),
+      scriptCount: p.angles.reduce((acc, a) => acc + (a.outline?._count.scripts ?? 0), 0),
     }))
   );
 }
@@ -58,8 +69,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
   const d = parsed.data;
+  const uid = await sessionUid(request);
   const project = await prisma.project.create({
     data: {
+      userId: uid && uid !== MASTER_UID ? uid : null,
       topic: d.topic,
       description: d.description,
       niche: d.niche,

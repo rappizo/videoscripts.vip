@@ -9,7 +9,8 @@ export async function generateScript(
   angleTitle: string,
   hookText: string,
   outline: OutlineSection[],
-  revisionNotes = ""
+  revisionNotes = "",
+  editPrefs = ""
 ): Promise<{ segments: ScriptSegment[]; cards: CreativeCards }> {
   const cards = drawCards();
   const system = fillTemplate(loadSystem("script"), {
@@ -20,6 +21,7 @@ export async function generateScript(
     AUDIENCE: ctx.audience || "general audience",
     OUTLINE: formatOutline(outline),
     CARDS: cardsToPrompt(cards),
+    EDIT_PREFS: editPrefs || "(none yet — no manual edits recorded in this project)",
     BANLIST: banlistText(),
   });
   const user = revisionNotes

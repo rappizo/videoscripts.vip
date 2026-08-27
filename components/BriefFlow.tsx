@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { waitForJob } from "@/lib/jobClient";
 import { Btn, Spinner, Tag } from "./ui";
 
 export interface Brief {
@@ -32,6 +33,11 @@ export default function BriefFlow() {
   const router = useRouter();
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [productName, setProductName] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [description, setDescription] = useState("");
+  const [refLink, setRefLink] = useState("");
+  const [durationSec, setDurationSec] = useState(30);
+  const [goal, setGoal] = useState("");
   const [briefs, setBriefs] = useState<Brief[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,11 +51,28 @@ export default function BriefFlow() {
       const res = await fetch("/api/briefs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: category.label, niche: category.niche, productName: productName.trim() }),
+        body: JSON.stringify({
+          category: category.label,
+          niche: category.niche,
+          productName: productName.trim(),
+          description: description.trim(),
+          ref: refLink.trim(),
+          durationSec,
+          goal: goal.trim(),
+        }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((json as { error?: string }).error ?? `HTTP ${res.status}`);
-      setBriefs((json as { briefs: Brief[] }).briefs);
+      const jobId = (json as { jobId?: string }).jobId;
+      if (jobId) {
+        const final = await waitForJob(jobId);
+        if (final.status === "failed") throw new Error(final.error ?? "生成失败");
+        if (final.status === "cancelled") return;
+        const result = (final.result ?? {}) as { briefs?: Brief[] };
+        setBriefs(result.briefs ?? []);
+      } else {
+        setBriefs((json as { briefs: Brief[] }).briefs);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -72,7 +95,7 @@ export default function BriefFlow() {
           productName: productName.trim(),
           brief: b.hookPreview,
           audience: b.audience,
-          durationSec: 30,
+          durationSec,
           style: b.style,
           goal: b.goal,
           materials: b.materials,
@@ -129,6 +152,68 @@ export default function BriefFlow() {
           {briefs ? "换一批(重新生成 5 个)" : "生成 5 个项目方案"}
         </Btn>
       </div>
+
+      <button
+        onClick={() => setShowAdvanced((v) => !v)}
+        className="mt-3 text-xs text-slate-400 hover:text-emerald-600"
+      >
+        {showAdvanced ? "收起高级输入 ▲" : "高级输入(可选):产品描述 / 参考视频 / 时长 / 目标 ▼"}
+      </button>
+      {showAdvanced && (
+        <div className="mt-2 grid gap-3 md:grid-cols-2">
+          <div className="md:col-span-2">
+            <label className="text-xs text-slate-500">产品描述(一句话讲清楚卖什么、有什么卖点)</label>
+            <input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. 15% 维 C + 维 E + 阿魏酸的提亮精华,清爽不粘腻…"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:bg-white"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs text-slate-500">参考视频链接(模仿其节奏与结构,不抄文案)</label>
+            <input
+              value={refLink}
+              onChange={(e) => setRefLink(e.target.value)}
+              placeholder="https://…"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:bg-white"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">时长</label>
+            <div className="mt-1 flex gap-1.5">
+              {[15, 30, 60].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDurationSec(d)}
+                  className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                    durationSec === d
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-medium"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {d}s
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">目标(不选则 AI 自定)</label>
+            <select
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+            >
+              <option value="">不指定</option>
+              <option value="views">播放量 views</option>
+              <option value="engagement">互动 engagement</option>
+              <option value="saves">收藏 saves</option>
+              <option value="conversions">转化 conversions</option>
+              <option value="brand awareness">品牌认知 brand awareness</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {busy && (
         <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">

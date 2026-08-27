@@ -19,12 +19,20 @@ export async function generateProductBrief(opts: {
   category: string;
   niche: string;
   productName: string;
+  description?: string;
+  ref?: string;
+  durationSec?: number;
+  goal?: string;
 }): Promise<ProductBrief & { cards: CreativeCards }> {
   const cards = drawCards();
   const cases = await getCasesFor("hook", opts.niche, 4);
   const system = fillTemplate(loadSystem("brief"), {
     CATEGORY: opts.category,
     PRODUCT: opts.productName,
+    DESCRIPTION: opts.description?.trim() ? `- Product description: ${opts.description.trim()}` : "",
+    REF: opts.ref?.trim() ? `- Reference video/link to mirror pacing: ${opts.ref.trim()}` : "",
+    DURATION: String(opts.durationSec ?? 30),
+    GOAL: opts.goal?.trim() || "not specified",
     CARDS: cardsToPrompt(cards),
     BANLIST: banlistText(),
     CASES: cases,

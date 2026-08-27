@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { ownsProject, sessionUid } from "@/lib/access";
 import { serializeReview, serializeScript } from "@/lib/serializers";
 import { handleError } from "@/lib/routeHelpers";
 
@@ -17,8 +18,21 @@ const patchSchema = z.object({
   segments: z.array(segmentSchema).min(1).max(30),
 });
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+// 脚本归属项目 userId 的只读查询(避免把关系对象序列化进响应)
+async function scriptOwner(scriptId: string) {
+  return prisma.script.findUnique({
+    where: { id: scriptId },
+    select: { outline: { select: { angle: { select: { project: { select: { userId: true } } } } } } },
+  });
+}
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const uid = await sessionUid(request);
+  const owner = await scriptOwner(id);
+  if (!owner || !ownsProject(uid, owner.outline.angle.project.userId)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   const script = await prisma.script.findUnique({
     where: { id },
     include: { reviews: { orderBy: { createdAt: "asc" } }, editLogs: { orderBy: { createdAt: "asc" } } },
@@ -39,6 +53,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const parsed = patchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
+    }
+    const uid = await sessionUid(request);
+    const owner = await scriptOwner(id);
+    if (!owner || !ownsProject(uid, owner.outline.angle.project.userId)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     const existing = await prisma.script.findUniqueOrThrow({ where: { id } });
     const oldSegments = JSON.parse(existing.segments) as {
@@ -81,8 +100,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const uid = await sessionUid(request);
+  const owner = await scriptOwner(id);
+  if (!owner || !ownsProject(uid, owner.outline.angle.project.userId)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   await prisma.script.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

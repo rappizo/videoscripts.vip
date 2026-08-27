@@ -26,11 +26,16 @@ model Project {
   style       String   @default("")
   goal        String   @default("")
   status      String   @default("active")
+  userId      String? // 归属用户(单密码登录/免登录时为 null)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  starred     Boolean  @default(false)
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   materials Material[]
   angles    Angle[]
+  jobs      Job[]
 }
 
 // 素材(字段化录入)
@@ -129,12 +134,45 @@ model EditLog {
   createdAt DateTime @default(now())
 }
 
-// 内置案例库
+// 内置案例库(含用户收藏的脚本)
 model Case {
   id         String   @id @default(cuid())
-  category   String // hook | structure
+  userId     String? // 收藏归属(null = 内置语料)
+  category   String // hook | structure | script
   content    String
   tags       String // JSON
   usageCount Int      @default(0)
   createdAt  DateTime @default(now())
+}
+
+// 用户(多账号)
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  projects Project[]
+  jobs     Job[]
+}
+
+// 后台生成任务(进度/取消/用量统计;Phase B 启用)
+model Job {
+  id         String    @id @default(cuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stage      String // brief | angles | hooks | outline | scripts | review | autopilot
+  status     String    @default("pending") // pending | running | succeeded | failed | cancelled
+  progress   String    @default("{}") // JSON:阶段进度
+  result     String    @default("{}") // JSON:终态结果(如 briefs 列表)
+  error      String?
+  tokensIn   Int       @default(0)
+  tokensOut  Int       @default(0)
+  model      String    @default("")
+  costUsd    Float     @default(0)
+  createdAt  DateTime  @default(now())
+  startedAt  DateTime?
+  finishedAt DateTime?
 }

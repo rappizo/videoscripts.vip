@@ -1,6 +1,88 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+
+// ---------- Toast ----------
+
+type ToastKind = "success" | "error" | "info";
+
+interface ToastItem {
+  id: number;
+  kind: ToastKind;
+  text: string;
+}
+
+const ToastCtx = createContext<{ push: (kind: ToastKind, text: string) => void }>({
+  push: () => {},
+});
+
+export function useToast() {
+  return useContext(ToastCtx);
+}
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const push = useCallback((kind: ToastKind, text: string) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, kind, text }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }, []);
+  return (
+    <ToastCtx.Provider value={{ push }}>
+      {children}
+      <div className="fixed bottom-4 right-4 z-50 space-y-2 w-80 max-w-[calc(100vw-2rem)]">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`rounded-lg border px-4 py-2.5 text-sm shadow-lg ${
+              t.kind === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : t.kind === "error"
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : "border-slate-200 bg-white text-slate-700"
+            }`}
+          >
+            {t.text}
+          </div>
+        ))}
+      </div>
+    </ToastCtx.Provider>
+  );
+}
+
+// ---------- Modal ----------
+
+export function Modal({
+  open,
+  title,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="relative rounded-xl bg-white shadow-xl w-full max-w-lg max-h-[85vh] overflow-auto">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200">
+          <h3 className="font-semibold text-slate-800">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+            aria-label="关闭"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 export function Btn({
   children,
@@ -8,12 +90,14 @@ export function Btn({
   variant = "primary",
   disabled,
   className = "",
+  title,
 }: {
   children: ReactNode;
   onClick?: () => void;
   variant?: "primary" | "ghost" | "danger" | "subtle";
   disabled?: boolean;
   className?: string;
+  title?: string;
 }) {
   const styles: Record<string, string> = {
     primary:
@@ -27,6 +111,7 @@ export function Btn({
     <button
       onClick={onClick}
       disabled={disabled}
+      title={title}
       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${styles[variant]} ${className}`}
     >
       {children}

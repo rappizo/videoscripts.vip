@@ -24,7 +24,8 @@ export async function reviewScript(
   angleTitle: string,
   hookText: string,
   segments: ScriptSegment[],
-  previousSummaries: string
+  previousSummaries: string,
+  editPrefs = ""
 ): Promise<ReviewResult> {
   const thresholds = rubricThresholds();
   const system = fillTemplate(loadSystem("review"), {
@@ -34,6 +35,7 @@ export async function reviewScript(
     DURATION: String(ctx.durationSec),
     MATERIALS: requiredMaterialLines(ctx.materials),
     PREVIOUS: previousSummaries || "(no previous scripts in this project)",
+    EDIT_PREFS: editPrefs || "(none yet — no manual edits recorded in this project)",
     SCRIPT: formatScript(segments),
     BANLIST: banlistText(),
     RUBRIC: rubricText(),
@@ -73,7 +75,9 @@ export async function reviewAndRefine(
   initialSegments: ScriptSegment[],
   cards: CreativeCards,
   previousSummaries: string,
-  maxRounds = 2
+  maxRounds = 2,
+  onProgress?: (round: number) => void | Promise<void>,
+  editPrefs = ""
 ): Promise<{
   segments: ScriptSegment[];
   cards: CreativeCards;
@@ -84,18 +88,20 @@ export async function reviewAndRefine(
   let segments = initialSegments;
   let currentCards = cards;
 
-  let review = await reviewScript(ctx, angleTitle, hookText, segments, previousSummaries);
+  let review = await reviewScript(ctx, angleTitle, hookText, segments, previousSummaries, editPrefs);
   reviews.push(review);
+  await onProgress?.(reviews.length);
 
   for (let round = 0; round < maxRounds && !review.passed; round++) {
     const notes = review.findings
       .map((f) => `- ${f}`)
       .join("\n");
-    const rewritten = await generateScript(ctx, angleTitle, hookText, outline, notes);
+    const rewritten = await generateScript(ctx, angleTitle, hookText, outline, notes, editPrefs);
     segments = rewritten.segments;
     currentCards = rewritten.cards;
-    review = await reviewScript(ctx, angleTitle, hookText, segments, previousSummaries);
+    review = await reviewScript(ctx, angleTitle, hookText, segments, previousSummaries, editPrefs);
     reviews.push(review);
+    await onProgress?.(reviews.length);
   }
 
   return { segments, cards: currentCards, reviews, passed: review.passed };

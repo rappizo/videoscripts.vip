@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { pageUid, projectScope } from "@/lib/access";
 import BriefFlow from "@/components/BriefFlow";
 import ProjectList from "@/components/ProjectList";
 import type { ProjectSummary } from "@/components/types";
@@ -6,12 +7,14 @@ import type { ProjectSummary } from "@/components/types";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const uid = await pageUid();
   const projects = await prisma.project.findMany({
+    where: projectScope(uid),
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { angles: true, materials: true } },
       angles: {
-        select: { status: true, title: true, outline: { select: { status: true } } },
+        select: { status: true, title: true, _count: { select: { hooks: true } }, outline: { select: { status: true, _count: { select: { scripts: true } } } } },
       },
     },
   });
@@ -27,6 +30,10 @@ export default async function Home() {
     angleCount: p._count.angles,
     selectedAngle: p.angles.find((a) => a.status === "selected")?.title ?? null,
     hasOutline: p.angles.some((a) => a.outline?.status === "locked"),
+    scriptCount: p.angles.reduce((acc, a) => acc + (a.outline?._count.scripts ?? 0), 0),
+    hookCount: p.angles.reduce((acc, a) => acc + a._count.hooks, 0),
+    starred: p.starred,
+    archivedAt: p.archivedAt?.toISOString() ?? null,
   }));
 
   return (

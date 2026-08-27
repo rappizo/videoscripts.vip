@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { aiContext } from "./context";
+import { assertNotCancelled, isJobCancelledError } from "../jobs";
 
 const baseURL = process.env.AI_BASE_URL || "https://api.apiyi.com/v1";
 const apiKey = process.env.AI_API_KEY || "";
@@ -33,10 +35,12 @@ export async function complete(opts: CompleteOptions): Promise<string> {
     .map((s) => s.trim())
     .filter(Boolean);
   const models = [...new Set([primary, ...fallbacks])];
+  const store = aiContext.getStore();
   let lastErr: unknown;
   for (const model of models) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
+        if (store?.jobId) await assertNotCancelled(store.jobId);
         const res = await client.chat.completions.create({
           model,
           temperature: opts.temperature ?? 0.8,
@@ -48,8 +52,14 @@ export async function complete(opts: CompleteOptions): Promise<string> {
         });
         const text = res.choices[0]?.message?.content ?? "";
         if (!text.trim()) throw new Error("Empty response from model");
+        if (store && res.usage) {
+          store.usage.tokensIn += res.usage.prompt_tokens ?? 0;
+          store.usage.tokensOut += res.usage.completion_tokens ?? 0;
+          if (!store.usage.model) store.usage.model = model;
+        }
         return text;
       } catch (e) {
+        if (isJobCancelledError(e)) throw e;
         lastErr = e;
         const msg = e instanceof Error ? e.message : String(e);
         // 通道不可用/限流类错误立即换下一个模型,其余短暂退避重试

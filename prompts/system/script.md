@@ -15,6 +15,9 @@ Write the FULL video script beat-by-beat from the locked outline below. Do NOT r
 # Writing style for THIS attempt
 {{CARDS}}
 
+# Editor taste from your previous manual edits in this project (internalize it — do not repeat what the editor fixed)
+{{EDIT_PREFS}}
+
 # Craft rules
 1. One line of voiceover per segment, 1-4 short sentences. Spoken rhythm: short punchy lines, varied length.
 2. On-screen text: max 6 words, supports the VO, never repeats it word-for-word.

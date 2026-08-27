@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { ownsProject, pageUid } from "@/lib/access";
 import Workbench from "@/components/Workbench";
 import type { ProjectDetail } from "@/components/types";
 
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const uid = await pageUid();
   const project = await prisma.project.findUnique({
     where: { id },
     include: {
@@ -22,7 +24,13 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
       },
     },
   });
-  if (!project) notFound();
+  if (!project || !ownsProject(uid, project.userId)) notFound();
+
+  const stats = await prisma.job.aggregate({
+    where: { projectId: id, status: "succeeded" },
+    _sum: { tokensIn: true, tokensOut: true, costUsd: true },
+    _count: true,
+  });
 
   const data: ProjectDetail = {
     id: project.id,
@@ -33,6 +41,14 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     durationSec: project.durationSec,
     style: project.style,
     goal: project.goal,
+    platform: project.platform,
+    language: project.language,
+    stats: {
+      jobCount: stats._count,
+      tokensIn: stats._sum.tokensIn ?? 0,
+      tokensOut: stats._sum.tokensOut ?? 0,
+      costUsd: stats._sum.costUsd ?? 0,
+    },
     materials: project.materials.map((m) => ({
       id: m.id,
       type: m.type,
