@@ -9,7 +9,6 @@ export async function GET() {
   const userCount = await prisma.user.count();
   return NextResponse.json({
     authEnabled: authEnabled(),
-    passwordLogin: Boolean(process.env.APP_PASSWORD),
     registrationOpen: userCount === 0 || process.env.ALLOW_REGISTRATION === "true",
   });
 }

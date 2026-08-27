@@ -2,7 +2,8 @@
 const COOKIE_MAX_AGE = 30 * 24 * 3600; // 30 天
 const PBKDF2_ITERATIONS = 100_000;
 
-// APP_PASSWORD 登录发放的"主账号"标识,可访问全部项目
+// 管理员账号(role=admin)在会话中映射为此标识,可访问全部项目
+// APP_PASSWORD 主密码登录已移除,登录只走数据库账号
 export const MASTER_UID = "master";
 
 export const SESSION_COOKIE = "auth";
@@ -105,42 +106,19 @@ export async function createSessionToken(secret: string, uid: string): Promise<s
 }
 
 // 校验会话并返回 uid;无效/过期返回 null
-// 兼容旧格式(exp.sig,由 APP_PASSWORD 登录发放):校验通过视为主账号
-
 export async function verifySessionToken(value: string | undefined, secret: string): Promise<string | null> {
   if (!value || !secret) return null;
   const parts = value.split(".");
-  if (parts.length === 3) {
-    const [expStr, uid, sig] = parts;
-    if (!expStr || !uid || !sig) return null;
-    const exp = Number(expStr);
-    if (!Number.isFinite(exp) || exp < Date.now()) return null;
-    const expected = await signAuth(`${expStr}.${uid}`, secret);
-    return constantTimeEqual(expected, sig) ? uid : null;
-  }
-  if (parts.length === 2) {
-    return (await verifyAuthToken(value, secret)) ? MASTER_UID : null;
-  }
-  return null;
-}
-
-// ---------- 旧接口(兼容已有调用) ----------
-
-export async function createAuthToken(secret: string): Promise<string> {
-  return createSessionToken(secret, MASTER_UID);
-}
-
-export async function verifyAuthToken(value: string | undefined, secret: string): Promise<boolean> {
-  if (!value || !secret) return false;
-  const [expStr, sig] = value.split(".");
-  if (!expStr || !sig) return false;
+  if (parts.length !== 3) return null;
+  const [expStr, uid, sig] = parts;
+  if (!expStr || !uid || !sig) return null;
   const exp = Number(expStr);
-  if (!Number.isFinite(exp) || exp < Date.now()) return false;
-  const expected = await signAuth(expStr, secret);
-  return constantTimeEqual(expected, sig);
+  if (!Number.isFinite(exp) || exp < Date.now()) return null;
+  const expected = await signAuth(`${expStr}.${uid}`, secret);
+  return constantTimeEqual(expected, sig) ? uid : null;
 }
 
-// 是否启用登录保护:设置 AUTH_SECRET 即启用(本地留空则跳过)
+// 是否启用登录保护:设置 AUTH_SECRET 即启用(生产必设;本地开发也应设置以测试登录)
 export function authEnabled(): boolean {
   return Boolean(process.env.AUTH_SECRET);
 }

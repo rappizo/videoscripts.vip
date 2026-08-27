@@ -7,12 +7,20 @@ export { MASTER_UID };
 
 export type SessionUid = string | null; // null = 免登录(本地开发)
 
+// 管理员账号在会话中映射为 MASTER_UID(可访问全部项目)
+async function resolveUid(uid: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { role: true } });
+  if (!user) return null;
+  return user.role === "admin" ? MASTER_UID : uid;
+}
+
 // 从 Request 的 Cookie 中解析会话并返回 uid;未启用认证时返回 null(不过滤)
 export async function sessionUid(req: Request): Promise<SessionUid> {
   if (!authEnabled()) return null;
   const cookie = req.headers.get("cookie") ?? "";
   const match = cookie.match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`));
-  return verifySessionToken(match?.[1], process.env.AUTH_SECRET!);
+  const uid = await verifySessionToken(match?.[1], process.env.AUTH_SECRET!);
+  return uid ? resolveUid(uid) : null;
 }
 
 // 服务端组件(页面)读取当前会话 uid
@@ -20,7 +28,8 @@ export async function sessionUid(req: Request): Promise<SessionUid> {
 export async function pageUid(): Promise<SessionUid> {
   if (!authEnabled()) return null;
   const jar = await cookies();
-  return verifySessionToken(jar.get(SESSION_COOKIE)?.value, process.env.AUTH_SECRET!);
+  const uid = await verifySessionToken(jar.get(SESSION_COOKIE)?.value, process.env.AUTH_SECRET!);
+  return uid ? resolveUid(uid) : null;
 }
 
 // 项目查询过滤条件:普通用户只看自己的项目;主账号 / 免登录看全部

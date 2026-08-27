@@ -1,13 +1,14 @@
 // Prisma schema — 短视频脚本 AI 工具
-// SQLite 单文件,零运维
+// PostgreSQL (Neon 托管):DATABASE_URL 为池化连接,迁移/DDL 走 DATABASE_URL_UNPOOLED
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // 项目(一个选题)
@@ -150,6 +151,7 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  role         String   @default("user") // user | admin
   createdAt    DateTime @default(now())
 
   projects Project[]

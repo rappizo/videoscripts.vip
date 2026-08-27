@@ -33,7 +33,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "该邮箱已注册" }, { status: 409 });
     }
     const user = await prisma.user.create({
-      data: { email, passwordHash: await hashPassword(parsed.data.password) },
+      data: {
+        email,
+        passwordHash: await hashPassword(parsed.data.password),
+        // 首个账号即管理员
+        role: userCount === 0 ? "admin" : "user",
+      },
     });
     // 首个账号自动接管存量无主项目
     if (userCount === 0) {
