@@ -1,6 +1,6 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { pageUid, projectScope } from "@/lib/access";
-import BriefFlow from "@/components/BriefFlow";
 import ProjectList from "@/components/ProjectList";
 import type { ProjectSummary } from "@/components/types";
 
@@ -25,6 +25,8 @@ export default async function Home() {
     niche: p.niche,
     audience: p.audience,
     durationSec: p.durationSec,
+    productName: p.productName,
+    status: p.status,
     createdAt: p.createdAt.toISOString(),
     materialCount: p._count.materials,
     angleCount: p._count.angles,
@@ -36,23 +38,39 @@ export default async function Home() {
     archivedAt: p.archivedAt?.toISOString() ?? null,
   }));
 
+  const activeCount = summaries.filter((p) => !p.archivedAt).length;
+  const draftCount = summaries.filter((p) => !p.archivedAt && p.status === "draft").length;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-slate-400 bg-clip-text text-transparent">
-            短视频脚本 AI 工作室
-          </span>
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          专为产品宣传视频:反套路创意牌 × 钩子工厂 × 素材锁定 × 六维评审改写
-        </p>
+      {/* 头部:品牌 + 新建项目入口 */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            <span className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-slate-400 bg-clip-text text-transparent">
+              短视频脚本 AI 工作室
+            </span>
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            专为产品宣传视频:反套路创意牌 × 钩子工厂 × 素材锁定 × 六维评审改写
+          </p>
+        </div>
+        <Link
+          href="/project/new"
+          className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+        >
+          ＋ 新建项目
+        </Link>
       </div>
 
-      <BriefFlow />
-
+      {/* 项目面板 */}
       <section>
-        <h2 className="text-lg font-bold mb-3">项目({projects.length})</h2>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <h2 className="text-lg font-bold">我的项目</h2>
+          <span className="text-sm text-slate-500">
+            共 {summaries.length} 个 · 进行中 {activeCount} · 草稿 {draftCount}
+          </span>
+        </div>
         <ProjectList projects={summaries} />
       </section>
     </div>

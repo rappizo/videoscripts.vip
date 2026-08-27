@@ -102,7 +102,9 @@ export default function ProjectList({ projects }: { projects: ProjectSummary[] }
 
       {!visible.length ? (
         <div className="rounded-xl border border-dashed border-slate-300 p-10 text-center text-slate-500">
-          {projects.length ? "没有符合条件的项目。" : "还没有项目。在上方输入产品名生成方案后开工。"}
+          {projects.length
+            ? "没有符合条件的项目。"
+            : "还没有项目。点击右上角「＋ 新建项目」，填写产品名生成方案后开工。"}
         </div>
       ) : (
         visible.map((p) => (
@@ -121,6 +123,10 @@ export default function ProjectList({ projects }: { projects: ProjectSummary[] }
               </Link>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 <Tag>{p.niche || "未分类"}</Tag>
+                {p.productName && <Tag>{p.productName}</Tag>}
+                {p.status === "draft" && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">草稿</span>
+                )}
                 <Tag>{p.durationSec}s</Tag>
                 {p.audience && <Tag>{p.audience}</Tag>}
                 {p.archivedAt && <Tag>已归档</Tag>}

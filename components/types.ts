@@ -107,13 +107,15 @@ export interface ProjectSummary {
   niche: string;
   audience: string;
   durationSec: number;
+  productName: string;
+  status: string;
   createdAt: string;
   materialCount: number;
   angleCount: number;
+  hookCount: number;
+  scriptCount: number;
   selectedAngle: string | null;
   hasOutline: boolean;
-  scriptCount: number;
-  hookCount: number;
   starred: boolean;
   archivedAt: string | null;
 }

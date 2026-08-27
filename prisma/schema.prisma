@@ -20,6 +20,7 @@ model Project {
   productCategory String   @default("") // 产品品类(中文标签)
   productName     String   @default("")
   brief           String   @default("") // 简报钩子预览
+  briefOptions    String   @default("[]") // 产品方案候选 JSON(开工前选定)
   audience        String   @default("")
   platform    String   @default("tiktok")
   durationSec Int      @default(30)

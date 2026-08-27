@@ -7,6 +7,12 @@ import { handleError } from "@/lib/routeHelpers";
 
 export const dynamic = "force-dynamic";
 
+const materialSchema = z.object({
+  type: z.enum(["fact", "data", "quote", "feature", "keyword", "story"]),
+  content: z.string().min(1).max(2000),
+  isRequired: z.boolean().default(true),
+});
+
 const patchSchema = z.object({
   topic: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional(),
@@ -20,6 +26,8 @@ const patchSchema = z.object({
   language: z.string().max(50).optional(),
   style: z.string().max(300).optional(),
   goal: z.string().max(300).optional(),
+  status: z.enum(["draft", "active"]).optional(),
+  materials: z.array(materialSchema).max(30).optional(),
   starred: z.boolean().optional(),
   archived: z.boolean().optional(),
 });
@@ -37,10 +45,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
     }
-    const { archived, ...fields } = parsed.data;
+    const { archived, materials, ...fields } = parsed.data;
     const data: Record<string, unknown> = { ...fields };
     if (archived !== undefined) data.archivedAt = archived ? new Date() : null;
     const project = await prisma.project.update({ where: { id }, data });
+    if (materials) {
+      await prisma.material.deleteMany({ where: { projectId: id } });
+      await prisma.material.createMany({
+        data: materials.map((m) => ({ projectId: id, type: m.type, content: m.content, isRequired: m.isRequired })),
+      });
+    }
     return NextResponse.json({ ok: true, archivedAt: project.archivedAt, starred: project.starred });
   } catch (e) {
     return handleError(e);

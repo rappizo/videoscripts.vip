@@ -40,15 +40,41 @@ export default function BriefFlow() {
   const [durationSec, setDurationSec] = useState(30);
   const [goal, setGoal] = useState("");
   const [briefs, setBriefs] = useState<Brief[] | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState<string | null>(null);
+
+  // 每次开始生成方案即创建一个项目草稿(历史可查、中途关闭也不丢)
+  async function ensureProject(): Promise<string> {
+    if (projectId) return projectId;
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        topic: productName.trim(),
+        description: description.trim(),
+        niche: category.niche,
+        productCategory: category.label,
+        productName: productName.trim(),
+        durationSec,
+        goal: goal.trim(),
+        status: "draft",
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((json as { error?: string }).error ?? "创建项目失败");
+    const id = (json as { id: string }).id;
+    setProjectId(id);
+    return id;
+  }
 
   async function generate() {
     if (!productName.trim()) return;
     setBusy(true);
     setError(null);
     try {
+      const pid = await ensureProject();
       const res = await fetch("/api/briefs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,6 +82,7 @@ export default function BriefFlow() {
           category: category.label,
           niche: category.niche,
           productName: productName.trim(),
+          projectId: pid,
           description: description.trim(),
           ref: refLink.trim(),
           durationSec,
@@ -82,29 +109,28 @@ export default function BriefFlow() {
   }
 
   async function startWithBrief(b: Brief) {
+    if (!projectId) return;
     setCreating(b.title);
     setError(null);
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           topic: b.title,
-          description: `${b.description}\n\nProduct: ${productName.trim()}`,
-          niche: category.niche,
-          productCategory: category.label,
-          productName: productName.trim(),
+          description: b.description,
           brief: b.hookPreview,
           audience: b.audience,
-          durationSec,
           style: b.style,
           goal: b.goal,
+          durationSec,
           materials: b.materials,
+          status: "active",
         }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error((json as { error?: string }).error ?? "Failed to create project");
-      router.push(`/project/${(json as { id: string }).id}`);
+      if (!res.ok) throw new Error((json as { error?: string }).error ?? "Failed to apply brief");
+      router.push(`/project/${projectId}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setCreating(null);
@@ -119,7 +145,9 @@ export default function BriefFlow() {
             产品宣传视频脚本
           </span>
         </h2>
-        <p className="mt-1 text-sm text-slate-500">选品类 → 填产品名 → AI 生成 2 个项目方案,选一个开工</p>
+        <p className="mt-1 text-sm text-slate-500">
+          选品类 → 填产品名 → 生成 2 个方案(自动创建项目草稿) → 选一个开工
+        </p>
       </div>
 
       <div className="mb-4">
@@ -228,7 +256,7 @@ export default function BriefFlow() {
       {briefs && !busy && (
         <>
           <p className="mt-5 mb-2 text-xs text-slate-500">
-            已生成 {briefs.length} 个方案(每个的创意牌组合不同),选一个继续进入五阶段流水线:
+            已生成 {briefs.length} 个方案(已存入项目草稿,每个的创意牌组合不同),选一个开工进入五阶段流水线:
           </p>
           <div className="grid gap-3 lg:grid-cols-2">
             {briefs.map((b, i) => (

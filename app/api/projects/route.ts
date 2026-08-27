@@ -24,6 +24,7 @@ const createSchema = z.object({
   language: z.string().max(50).default("English"),
   style: z.string().max(300).default(""),
   goal: z.string().max(300).default(""),
+  status: z.enum(["draft", "active"]).default("active"),
   materials: z.array(materialSchema).max(30).default([]),
 });
 
@@ -49,6 +50,8 @@ export async function GET(request: Request) {
       niche: p.niche,
       audience: p.audience,
       durationSec: p.durationSec,
+      productName: p.productName,
+      status: p.status,
       createdAt: p.createdAt,
       starred: p.starred,
       archivedAt: p.archivedAt,
@@ -85,6 +88,7 @@ export async function POST(request: Request) {
       language: d.language,
       style: d.style,
       goal: d.goal,
+      status: d.status,
       materials: {
         create: d.materials.map((m) => ({
           type: m.type,
